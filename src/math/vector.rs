@@ -14,6 +14,14 @@ impl<const N: usize, const Q: u32> Vector<N, Q> {
 		}
 		result
 	}
+	pub fn deserialize<I>(iter: &mut I) -> Self
+	where
+		I: Iterator<Item = bool>
+	{
+		Self {
+			data: std::array::from_fn(|_| QUInt::deserialize(iter))
+		}
+	}
 }
 
 impl<const N: usize, const Q: u32>

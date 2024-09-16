@@ -18,6 +18,7 @@ use encrypt_key::EncryptKey;
 use math::qint::QUInt;
 use math::srng::SRng;
 use math::vector::Vector;
+use base64::alphabet::STANDARD as BASE64_ALPHABET;
 
 const N: usize = 4;
 const M: usize = 3;
@@ -69,6 +70,44 @@ fn decrypt(ciphertext: &Ciphertext<N, Q>, key: &DecryptKey<N, Q>) -> bool {
 	dist.raw_value > Q / 4
 }
 
+trait Base64Convertible {
+	fn to_base64(&self) -> String;
+	fn of_base64(base64: &str) -> Self;
+}
+impl Base64Convertible for Vec<bool> {
+	fn to_base64(&self) -> String {
+		let mut result = String::new();
+		for start_index in (0 .. self.len()).step_by(6) {
+			let end_index = std::cmp::min(start_index + 6, self.len());
+			let slice = &self[start_index .. end_index];
+			let mut total = 0usize;
+			let mut p = 1;
+			for bit in slice {
+				if *bit {
+					total += p;
+				}
+				p *= 2;
+			}
+			result.push(BASE64_ALPHABET.as_str().chars().nth(total).unwrap());
+		}
+		result
+	}
+	fn of_base64(base64: &str) -> Self {
+		let mut bools = vec![];
+		for ch in base64.chars() {
+			let mut index = BASE64_ALPHABET.as_str()
+				.chars()
+				.position(|x| x == ch)
+				.unwrap();
+			for _ in 0 .. 6 {
+				bools.push(index % 2 == 1);
+				index /= 2;
+			}
+		}
+		bools
+	}
+}
+
 fn main() {
 	
 	let mut rng = SRng::new();
@@ -76,11 +115,23 @@ fn main() {
 	let (encrypt_key, decrypt_key) = keygen(&mut rng);
 	
 	let input = false;
-	for _ in 0 .. 1_000_000 {
-		let ciphertext = encrypt(input, &encrypt_key, &mut rng);
-		let output = decrypt(&ciphertext, &decrypt_key);
-		if output != input {
-			println!("Failure");
-		}
-	}
+	let ciphertext = encrypt(input, &encrypt_key, &mut rng);
+	println!("Original ciphertext: {}, {}", ciphertext.a, ciphertext.t);
+	let bits = ciphertext.serialize();
+	println!("Bits: {:?}", bits);
+	let base64 = bits.to_base64();
+	println!("Result: {:?}", base64);
+	let bits_decoded = Vec::<bool>::of_base64(&base64);
+	println!("Decoded: {:?}", bits_decoded);
+	let ciphertext_decoded = Ciphertext::<N, Q>::deserialize(&mut bits_decoded.into_iter());
+	println!("Decoded ciphertext: {}, {}", ciphertext_decoded.a, ciphertext_decoded.t);
+	
+	// let input = false;
+	// for _ in 0 .. 1_000_000 {
+	// 	let ciphertext = encrypt(input, &encrypt_key, &mut rng);
+	// 	let output = decrypt(&ciphertext, &decrypt_key);
+	// 	if output != input {
+	// 		println!("Failure");
+	// 	}
+	// }
 }

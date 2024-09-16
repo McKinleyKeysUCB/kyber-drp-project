@@ -14,4 +14,12 @@ impl<const N: usize, const Q: u32>
 		result.extend(self.t.serialize().iter());
 		result
 	}
+	pub fn deserialize<I>(iter: &mut I) -> Self
+	where
+		I: Iterator<Item = bool>
+	{
+		let a = Vector::deserialize(iter);
+		let t = QUInt::deserialize(iter);
+		Self { a, t }
+	}
 }
