@@ -1,0 +1,49 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "lldb",
+			"request": "launch",
+			// Force VS Code to rebuild the code every time we press CMD+R. Documentation:
+			// https://code.visualstudio.com/docs/editor/debugging
+			"preLaunchTask": "rust: cargo build",
+			"name": "Debug executable 'kyber'",
+			"cargo": {
+				"args": [
+					"build",
+					"--bin=kyber",
+					"--package=kyber"
+				],
+				"filter": {
+					"name": "kyber",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"preLaunchTask": "rust: cargo build",
+			"name": "Debug unit tests in executable 'kyber'",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--bin=kyber",
+					"--package=kyber"
+				],
+				"filter": {
+					"name": "kyber",
+					"kind": "bin"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		}
+	]
+}
