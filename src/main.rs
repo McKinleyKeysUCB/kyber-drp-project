@@ -108,30 +108,69 @@ impl Base64Convertible for Vec<bool> {
 	}
 }
 
+fn encrypt_bits(bits: &Vec<bool>, key: &EncryptKey<N, M, Q>, rng: &mut SRng) -> Vec<bool> {
+	let mut result = vec![];
+	for bit in bits {
+		let ciphertext = encrypt(*bit, key, rng);
+		result.extend(ciphertext.serialize().iter());
+	}
+	result
+}
+fn decrypt_bits(bits: &Vec<bool>, key: &DecryptKey<N, Q>) -> Vec<bool> {
+	let mut result = vec![];
+	let mut iter = bits.iter();
+	loop {
+		let Some(ciphertext) = Ciphertext::<N, Q>::deserialize(&mut iter) else {
+			break;
+		};
+		let plaintext = decrypt(&ciphertext, key);
+		result.push(plaintext);
+	}
+	result
+}
+
+fn string_to_bits(message: &str) -> Vec<bool> {
+	let mut result = vec![];
+	for ch in message.chars() {
+		let mut byte = ch as u8;
+		for _ in 0 .. 8 {
+			result.push(byte % 2 == 1);
+			byte /= 2;
+		}
+	}
+	result
+}
+fn string_of_bits(bits: &Vec<bool>) -> String {
+	let mut result = String::new();
+	for start_index in (0 .. bits.len()).step_by(8) {
+		let end_index = std::cmp::min(start_index + 8, bits.len());
+		let slice = &bits[start_index .. end_index];
+		let mut total = 0u32;
+		let mut p = 1;
+		for bit in slice {
+			if *bit {
+				total += p;
+			}
+			p *= 2;
+		}
+		result.push(total as u8 as char);
+	}
+	result
+}
+
 fn main() {
 	
 	let mut rng = SRng::new();
 	
 	let (encrypt_key, decrypt_key) = keygen(&mut rng);
 	
-	let input = false;
-	let ciphertext = encrypt(input, &encrypt_key, &mut rng);
-	println!("Original ciphertext: {}, {}", ciphertext.a, ciphertext.t);
-	let bits = ciphertext.serialize();
-	println!("Bits: {:?}", bits);
-	let base64 = bits.to_base64();
-	println!("Result: {:?}", base64);
-	let bits_decoded = Vec::<bool>::of_base64(&base64);
-	println!("Decoded: {:?}", bits_decoded);
-	let ciphertext_decoded = Ciphertext::<N, Q>::deserialize(&mut bits_decoded.into_iter());
-	println!("Decoded ciphertext: {}, {}", ciphertext_decoded.a, ciphertext_decoded.t);
-	
-	// let input = false;
-	// for _ in 0 .. 1_000_000 {
-	// 	let ciphertext = encrypt(input, &encrypt_key, &mut rng);
-	// 	let output = decrypt(&ciphertext, &decrypt_key);
-	// 	if output != input {
-	// 		println!("Failure");
-	// 	}
-	// }
+	let message = "Hello";
+	let message_bits = string_to_bits(&message);
+	let cipher = encrypt_bits(&message_bits, &encrypt_key, &mut rng);
+	let base64 = cipher.to_base64();
+	println!("Base64: {:?}", base64);
+	let cipher_deserialized = Vec::<bool>::of_base64(&base64);
+	let result_bits = decrypt_bits(&cipher_deserialized, &decrypt_key);
+	let result = string_of_bits(&result_bits);
+	println!("Result: {:?}", result);
 }

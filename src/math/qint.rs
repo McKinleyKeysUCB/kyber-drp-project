@@ -29,31 +29,16 @@ impl<const Q: u32> QUInt<Q> {
 		}
 		result
 	}
-	// pub fn deserialize(bits: &Vec<bool>) -> Self {
-	// 	let mut q = 1;
-	// 	let mut value = 0;
-	// 	let mut i = 0;
-	// 	while q < Q {
-	// 		if bits[i] {
-	// 			value += q;
-	// 		}
-	// 		q *= 2;
-	// 		i += 1;
-	// 	}
-	// 	// TODO: Return Result
-	// 	Self::of_u32(value)
-	// }
-	pub fn deserialize<I>(iter: &mut I) -> Self
+	pub fn deserialize<'a, I>(iter: &mut I) -> Option<Self>
 	where
-		I: Iterator<Item = bool>
+		I: Iterator<Item = &'a bool>
 	{
 		let mut q = 1;
 		let mut value = 0;
 		while q < Q {
 			match iter.next() {
-				// TODO: Return Result
-				None => panic!(),
-				Some(bit) => {
+				None => return None,
+				Some(&bit) => {
 					if bit {
 						value += q;
 					}
@@ -61,7 +46,7 @@ impl<const Q: u32> QUInt<Q> {
 			};
 			q *= 2;
 		}
-		Self::of_u32(value)
+		Some(Self::of_u32(value))
 	}
 }
 impl<const Q: u32> std::fmt::Display for QUInt<Q> {

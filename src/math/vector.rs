@@ -14,13 +14,18 @@ impl<const N: usize, const Q: u32> Vector<N, Q> {
 		}
 		result
 	}
-	pub fn deserialize<I>(iter: &mut I) -> Self
+	pub fn deserialize<'a, I>(iter: &mut I) -> Option<Self>
 	where
-		I: Iterator<Item = bool>
+		I: Iterator<Item = &'a bool>
 	{
-		Self {
-			data: std::array::from_fn(|_| QUInt::deserialize(iter))
+		let mut data = [QUInt::zero(); N];
+		for i in 0 .. N {
+			match QUInt::deserialize(iter) {
+				None => return None,
+				Some(value) => data[i] = value,
+			};
 		}
+		Some(Self { data })
 	}
 }
 
