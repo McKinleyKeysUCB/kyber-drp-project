@@ -1,5 +1,5 @@
 
-use crate::math::{qint::QUInt, srng::SRng, vector::Vector};
+use crate::math::{qint::QInt, srng::SRng, vector::Vector};
 use super::{ciphertext::Ciphertext, decrypt_key::DecryptKey, encrypt_key::EncryptKey};
 
 pub fn keygen
@@ -26,7 +26,7 @@ fn encrypt_bit
 	let mask = rng.gen_bits::<M>();
 	let a_folded = mask.data.iter()
 		.enumerate()
-		.fold(Vector { data: [QUInt::zero(); N] }, |acc, (i, value)| {
+		.fold(Vector { data: [QInt::zero(); N] }, |acc, (i, value)| {
 			if *value {
 				acc + &key.a.rows[i]
 			}
@@ -36,7 +36,7 @@ fn encrypt_bit
 		});
 	let mut t_folded = mask.data.iter()
 		.enumerate()
-		.fold(QUInt::zero(), |acc, (i, value)| {
+		.fold(QInt::zero(), |acc, (i, value)| {
 			if *value {
 				acc + key.t.data[i]
 			}
@@ -45,7 +45,7 @@ fn encrypt_bit
 			}
 		});
 	if bit {
-		t_folded = t_folded + QUInt::of_u32(Q / 2);
+		t_folded = t_folded + QInt::of_u32(Q / 2);
 	}
 	Ciphertext {
 		a: a_folded,

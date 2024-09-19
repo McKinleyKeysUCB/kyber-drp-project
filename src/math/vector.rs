@@ -1,10 +1,10 @@
 
-use crate::math::qint::QUInt;
+use crate::math::qint::QInt;
 use std::ops::Add;
 use std::ops::Mul;
 
 pub struct Vector<const N: usize, const Q: u32> {
-	pub data: [QUInt<Q>; N],
+	pub data: [QInt<Q>; N],
 }
 impl<const N: usize, const Q: u32> Vector<N, Q> {
 	pub fn serialize(&self) -> Vec<bool> {
@@ -18,9 +18,9 @@ impl<const N: usize, const Q: u32> Vector<N, Q> {
 	where
 		I: Iterator<Item = &'a bool>
 	{
-		let mut data = [QUInt::zero(); N];
+		let mut data = [QInt::zero(); N];
 		for i in 0 .. N {
-			match QUInt::deserialize(iter) {
+			match QInt::deserialize(iter) {
 				None => return None,
 				Some(value) => data[i] = value,
 			};
@@ -91,9 +91,9 @@ impl<const N: usize, const Q: u32>
 	Mul<&Vector<N, Q>>
 	for &Vector<N, Q>
 {	
-	type Output = QUInt<Q>;
+	type Output = QInt<Q>;
 	
 	fn mul(self, rhs: &Vector<N, Q>) -> Self::Output {
-		(0 .. N).fold(QUInt::zero(), |acc, i| acc + self.data[i] * rhs.data[i])
+		(0 .. N).fold(QInt::zero(), |acc, i| acc + self.data[i] * rhs.data[i])
 	}	
 }

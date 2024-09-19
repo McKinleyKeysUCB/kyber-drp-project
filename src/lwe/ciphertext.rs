@@ -1,9 +1,9 @@
 
-use crate::math::{qint::QUInt, vector::Vector};
+use crate::math::{qint::QInt, vector::Vector};
 
 pub struct Ciphertext<const N: usize, const Q: u32> {
 	pub a: Vector<N, Q>,
-	pub t: QUInt<Q>,
+	pub t: QInt<Q>,
 }
 impl<const N: usize, const Q: u32>
 	Ciphertext<N, Q>
@@ -21,7 +21,7 @@ impl<const N: usize, const Q: u32>
 		let Some(a) = Vector::deserialize(iter) else {
 			return None;
 		};
-		let Some(t) = QUInt::deserialize(iter) else {
+		let Some(t) = QInt::deserialize(iter) else {
 			return None;
 		};
 		Some(Self { a, t })
