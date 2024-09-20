@@ -11,16 +11,17 @@
 mod base64;
 mod lwe;
 mod math;
+mod mlwe;
 mod rlwe;
 mod util;
 
 use base64::Base64Convertible;
-use rlwe::core::{decrypt, encrypt, keygen};
+use mlwe::core::{decrypt, encrypt, keygen};
 use math::srng::SRng;
 
-const N: usize = 4;
+const N: usize = 8;
 const M: usize = 3;
-const Q: u32 = 23;
+const Q: u32 = 71;
 
 fn string_to_bits(message: &str) -> Vec<bool> {
 	let mut result = vec![];
@@ -55,9 +56,9 @@ fn main() {
 	
 	let mut rng = SRng::new();
 	
-	let (encrypt_key, decrypt_key) = keygen::<N, Q>(&mut rng);
+	let (encrypt_key, decrypt_key) = keygen(&mut rng);
 	
-	let message = "Hello";
+	let message = "Hello there. This is a really long message that takes several lines. Will it all be decrypted correctly?";
 	let message_bits = string_to_bits(&message);
 	let cipher = encrypt(&message_bits, &encrypt_key, &mut rng);
 	let base64 = cipher.to_base64();

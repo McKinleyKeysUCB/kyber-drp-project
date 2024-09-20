@@ -30,3 +30,16 @@ impl<T, const R: usize, const C: usize>
 		}
 	}
 }
+
+impl<T, const R: usize, const C: usize>
+	Matrix<T, R, C>
+	where T: Ring, for<'a> &'a T: RingOps<T>, T: Clone
+{
+	pub fn transpose(&self) -> Matrix<T, C, R> {
+		Matrix {
+			rows: std::array::from_fn(|r| Vector {
+				data: std::array::from_fn(|c| self.rows[c].data[r].clone()),
+			}),
+		}
+	}
+}

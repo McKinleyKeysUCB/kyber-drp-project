@@ -6,6 +6,7 @@ use crate::util::serializable::Serializable;
 use super::{qint::QInt, ring::{Ring, RingOps}};
 
 /// A member of `Z_Q[x]/(x^N + 1)`.
+#[derive(Clone, Copy)]
 pub struct Poly<const N: usize, const Q: u32> {
 	pub coefficients: [QInt<Q>; N],
 }
