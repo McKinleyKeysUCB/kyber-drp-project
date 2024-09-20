@@ -1,6 +1,5 @@
 
-use std::ops::Add;
-use std::ops::Mul;
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone, Copy)]
 pub struct QInt<const Q: u32> {
@@ -71,6 +70,14 @@ impl<const Q: u32> Add<QInt<Q>> for QInt<Q> {
 	fn add(self, rhs: QInt<Q>) -> Self::Output {
 		Self::Output {
 			raw_value: (self.raw_value + rhs.raw_value) % Q,
+		}
+	}
+}
+impl<const Q: u32> Sub<QInt<Q>> for QInt<Q> {
+	type Output = QInt<Q>;
+	fn sub(self, rhs: QInt<Q>) -> Self::Output {
+		Self::Output {
+			raw_value: (self.raw_value + Q - rhs.raw_value) % Q,
 		}
 	}
 }
