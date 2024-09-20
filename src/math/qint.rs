@@ -25,11 +25,25 @@ impl<const Q: u32> Ring for QInt<Q> {
 		Self::of_u32(1)
 	}
 }
-impl<const Q: u32> RingOps<QInt<Q>> for &QInt<Q> {
-	
-}
-impl<const Q: u32> RingOps<QInt<Q>> for QInt<Q> {
-	
+impl<const Q: u32> RingOps<QInt<Q>> for QInt<Q> {}
+impl<const Q: u32> RingOps<QInt<Q>> for &QInt<Q> {}
+
+impl<const Q: u32> QInt<Q> {
+	fn add_impl(&self, rhs: &Self) -> Self {
+		Self {
+			raw_value: (self.raw_value + rhs.raw_value) % Q,
+		}
+	}
+	fn sub_impl(&self, rhs: &Self) -> Self {
+		Self {
+			raw_value: (self.raw_value + Q - rhs.raw_value) % Q,
+		}
+	}
+	fn mul_impl(&self, rhs: &Self) -> Self {
+		Self {
+			raw_value: (self.raw_value * rhs.raw_value) % Q,
+		}
+	}
 }
 
 impl<const Q: u32> Add<QInt<Q>> for QInt<Q> {
@@ -102,24 +116,6 @@ impl<const Q: u32> Mul<&QInt<Q>> for &QInt<Q> {
 	type Output = QInt<Q>;
 	fn mul(self, rhs: &QInt<Q>) -> Self::Output {
 		self.mul_impl(rhs)
-	}
-}
-
-impl<const Q: u32> QInt<Q> {
-	fn add_impl(&self, rhs: &Self) -> Self {
-		Self {
-			raw_value: (self.raw_value + rhs.raw_value) % Q,
-		}
-	}
-	fn sub_impl(&self, rhs: &Self) -> Self {
-		Self {
-			raw_value: (self.raw_value + Q - rhs.raw_value) % Q,
-		}
-	}
-	fn mul_impl(&self, rhs: &Self) -> Self {
-		Self {
-			raw_value: (self.raw_value * rhs.raw_value) % Q,
-		}
 	}
 }
 
