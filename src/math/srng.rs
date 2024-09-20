@@ -37,13 +37,13 @@ impl SRng {
 	fn gen_small_array_inclusive<const N: usize, const Q: u32>(&mut self, range: &RangeInclusive<i32>) -> [QInt<Q>; N] {
 		std::array::from_fn(|_| self.gen_small_qint_inclusive(range.clone()))
 	}
-	pub fn gen_vector<const N: usize, const Q: u32>(&mut self) -> Vector<N, Q> {
+	pub fn gen_vector<const N: usize, const Q: u32>(&mut self) -> Vector<QInt<Q>, N> {
 		Vector { data: self.gen_array() }
 	}
-	pub fn gen_small_vector<const N: usize, const Q: u32>(&mut self, range: Range<i32>) -> Vector<N, Q> {
+	pub fn gen_small_vector<const N: usize, const Q: u32>(&mut self, range: Range<i32>) -> Vector<QInt<Q>, N> {
 		Vector { data: self.gen_small_array(&range) }
 	}
-	pub fn gen_small_vector_inclusive<const N: usize, const Q: u32>(&mut self, range: RangeInclusive<i32>) -> Vector<N, Q> {
+	pub fn gen_small_vector_inclusive<const N: usize, const Q: u32>(&mut self, range: RangeInclusive<i32>) -> Vector<QInt<Q>, N> {
 		Vector { data: self.gen_small_array_inclusive(&range) }
 	}
 	pub fn gen_poly<const N: usize, const Q: u32>(&mut self) -> Poly<N, Q> {
@@ -55,7 +55,7 @@ impl SRng {
 	pub fn gen_small_poly_inclusive<const N: usize, const Q: u32>(&mut self, range: RangeInclusive<i32>) -> Poly<N, Q> {
 		Poly { coefficients: self.gen_small_array_inclusive(&range) }
 	}
-	pub fn gen_matrix<const R: usize, const C: usize, const Q: u32>(&mut self) -> Matrix<R, C, Q> {
+	pub fn gen_matrix<const R: usize, const C: usize, const Q: u32>(&mut self) -> Matrix<QInt<Q>, R, C> {
 		let rows = std::array::from_fn(|_| self.gen_vector());
 		Matrix { rows }
 	}

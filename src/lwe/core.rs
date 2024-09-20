@@ -1,5 +1,5 @@
 
-use crate::math::{qint::QInt, srng::SRng, vector::Vector};
+use crate::math::{qint::QInt, ring::Ring, srng::SRng, vector::Vector};
 use super::{ciphertext::Ciphertext, decrypt_key::DecryptKey, encrypt_key::EncryptKey};
 
 pub fn keygen

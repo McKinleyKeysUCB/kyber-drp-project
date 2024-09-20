@@ -1,5 +1,5 @@
 
-use super::qint::QInt;
+use super::{qint::QInt, ring::Ring};
 
 /// A member of `Z_Q[x]/(x^N + 1)`.
 pub struct Poly<const N: usize, const Q: u32> {

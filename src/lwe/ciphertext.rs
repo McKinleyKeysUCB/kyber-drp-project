@@ -1,8 +1,9 @@
 
 use crate::math::{qint::QInt, vector::Vector};
+use crate::util::serializable::Serializable;
 
 pub struct Ciphertext<const N: usize, const Q: u32> {
-	pub a: Vector<N, Q>,
+	pub a: Vector<QInt<Q>, N>,
 	pub t: QInt<Q>,
 }
 impl<const N: usize, const Q: u32>

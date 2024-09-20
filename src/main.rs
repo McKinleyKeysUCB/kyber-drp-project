@@ -3,6 +3,7 @@
 #![feature(generic_const_exprs)]
 #![feature(adt_const_params)]
 #![feature(cmp_minmax)]
+#![feature(array_try_from_fn)]
 
 #![allow(unused_parens)]
 #![allow(dead_code)]
@@ -10,6 +11,7 @@
 mod base64;
 mod lwe;
 mod math;
+mod util;
 
 use base64::Base64Convertible;
 use lwe::core::{decrypt, encrypt, keygen};
