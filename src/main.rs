@@ -11,10 +11,11 @@
 mod base64;
 mod lwe;
 mod math;
+mod rlwe;
 mod util;
 
 use base64::Base64Convertible;
-use lwe::core::{decrypt, encrypt, keygen};
+use rlwe::core::{decrypt, encrypt, keygen};
 use math::srng::SRng;
 
 const N: usize = 4;
@@ -54,7 +55,7 @@ fn main() {
 	
 	let mut rng = SRng::new();
 	
-	let (encrypt_key, decrypt_key) = keygen::<N, M, Q>(&mut rng);
+	let (encrypt_key, decrypt_key) = keygen::<N, Q>(&mut rng);
 	
 	let message = "Hello";
 	let message_bits = string_to_bits(&message);
