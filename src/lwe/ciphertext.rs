@@ -8,7 +8,7 @@ pub struct Ciphertext<const N: usize, const Q: u32> {
 }
 impl<const N: usize, const Q: u32>
 	Ciphertext<N, Q>
-{	
+{
 	pub fn serialize(&self) -> Vec<bool> {
 		let mut result = vec![];
 		result.extend(self.a.serialize().iter());

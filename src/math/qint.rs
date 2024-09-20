@@ -16,6 +16,9 @@ impl<const Q: u32> QInt<Q> {
 		let dist = std::cmp::min(max - min, min + Q - max);
 		Self::of_u32(dist)
 	}
+	pub fn half() -> Self {
+		Self::of_u32(Q / 2)
+	}
 }
 impl<const Q: u32> Ring for QInt<Q> {
 	fn zero() -> Self {

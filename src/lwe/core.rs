@@ -45,7 +45,7 @@ fn encrypt_bit
 			}
 		});
 	if bit {
-		t_folded = t_folded + QInt::of_u32(Q / 2);
+		t_folded = t_folded + QInt::half();
 	}
 	Ciphertext {
 		a: a_folded,
