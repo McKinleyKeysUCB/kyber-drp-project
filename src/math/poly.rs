@@ -1,12 +1,15 @@
 
 use std::ops::{Add, Mul, Sub};
 
+use crate::util::serializable::Serializable;
+
 use super::{qint::QInt, ring::{Ring, RingOps}};
 
 /// A member of `Z_Q[x]/(x^N + 1)`.
 pub struct Poly<const N: usize, const Q: u32> {
 	pub coefficients: [QInt<Q>; N],
 }
+
 impl<const N: usize, const Q: u32> Ring for Poly<N, Q> {
 	fn zero() -> Self {
 		let coefficients = std::array::from_fn(|_| QInt::zero());
@@ -40,6 +43,10 @@ impl<const N: usize, const Q: u32> Poly<N, Q>
 			});
 			positive - negative
 		});
+		Self { coefficients }
+	}
+	fn mul_scalar_impl(&self, rhs: &QInt<Q>) -> Self {
+		let coefficients = self.coefficients.map(|c| c * rhs);
 		Self { coefficients }
 	}
 }
@@ -118,6 +125,59 @@ impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for &Poly<N, Q> {
 }
 
 
+// --- Scalar Multiplication ---
+
+impl<const N: usize, const Q: u32> Mul<QInt<Q>> for Poly<N, Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: QInt<Q>) -> Self::Output {
+		self.mul_scalar_impl(&rhs)
+	}
+}
+impl<const N: usize, const Q: u32> Mul<QInt<Q>> for &Poly<N, Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: QInt<Q>) -> Self::Output {
+		self.mul_scalar_impl(&rhs)
+	}
+}
+impl<const N: usize, const Q: u32> Mul<&QInt<Q>> for Poly<N, Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: &QInt<Q>) -> Self::Output {
+		self.mul_scalar_impl(rhs)
+	}
+}
+impl<const N: usize, const Q: u32> Mul<&QInt<Q>> for &Poly<N, Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: &QInt<Q>) -> Self::Output {
+		self.mul_scalar_impl(rhs)
+	}
+}
+
+impl<const N: usize, const Q: u32> Mul<Poly<N, Q>> for QInt<Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: Poly<N, Q>) -> Self::Output {
+		rhs.mul_scalar_impl(&self)
+	}
+}
+impl<const N: usize, const Q: u32> Mul<Poly<N, Q>> for &QInt<Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: Poly<N, Q>) -> Self::Output {
+		rhs.mul_scalar_impl(self)
+	}
+}
+impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for QInt<Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: &Poly<N, Q>) -> Self::Output {
+		rhs.mul_scalar_impl(&self)
+	}
+}
+impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for &QInt<Q> {
+	type Output = Poly<N, Q>;
+	fn mul(self, rhs: &Poly<N, Q>) -> Self::Output {
+		rhs.mul_scalar_impl(self)
+	}
+}
+
+
 // --- Display ---
 
 impl<const N: usize, const Q: u32>
@@ -138,5 +198,28 @@ impl<const N: usize, const Q: u32>
 			.collect::<Vec<String>>()
 			.join(" + ");
 		write!(f, "{}", formatted)
+	}
+}
+
+
+// --- Serialization ---
+
+impl<const N: usize, const Q: u32>
+	Serializable
+	for Poly<N, Q>
+{
+	fn serialize(&self) -> Vec<bool> {
+		let mut result = vec![];
+		for value in &self.coefficients {
+			result.extend(value.serialize().iter());
+		}
+		result
+	}
+	fn deserialize<'a, I>(iter: &mut I) -> Option<Self>
+	where
+		I: Iterator<Item = &'a bool>
+	{
+		std::array::try_from_fn(|_| QInt::deserialize(iter))
+			.map(|coefficients| Self { coefficients })
 	}
 }
