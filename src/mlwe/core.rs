@@ -2,10 +2,10 @@
 use crate::math::{bits::Bits, poly::Poly, qint::QInt, ring::Ring, srng::SRng};
 use super::{ciphertext::Ciphertext, decrypt_key::DecryptKey, encrypt_key::EncryptKey};
 
-const N: usize = 8;
-const R: usize = 2;
-const C: usize = 2;
-const Q: u32 = 71;
+const N: usize = 256;
+const R: usize = 4;
+const C: usize = 4;
+const Q: u32 = 3329;
 
 pub fn keygen(rng: &mut SRng) -> (EncryptKey<N, R, C, Q>, DecryptKey<N, C, Q>) {
 	let s = rng.gen_small_poly_vector_inclusive::<C, N, Q>(-1 ..= 1);
@@ -56,6 +56,7 @@ pub fn split_into_chunks<const N: usize>(bits: &Vec<bool>) -> Vec<Bits<N>> {
 		i += 1;
 		if i == N {
 			chunks.push(Bits { data: current_chunk });
+			current_chunk.fill(false);
 			i = 0;
 		}
 	}
