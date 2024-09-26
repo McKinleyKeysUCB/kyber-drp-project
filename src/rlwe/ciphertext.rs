@@ -3,8 +3,8 @@ use crate::math::poly::Poly;
 use crate::util::serializable::Serializable;
 
 pub struct Ciphertext<const N: usize, const Q: u32> {
-	pub u: Poly<N, Q>,
-	pub v: Poly<N, Q>,
+	pub u: Poly<N, Q, 1>,
+	pub v: Poly<N, Q, 1>,
 }
 impl<const N: usize, const Q: u32>
 	Ciphertext<N, Q>

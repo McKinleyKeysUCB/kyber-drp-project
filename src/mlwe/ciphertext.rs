@@ -4,8 +4,8 @@ use crate::math::vector::Vector;
 use crate::util::serializable::Serializable;
 
 pub struct Ciphertext<const N: usize, const R: usize, const Q: u32> {
-	pub u: Vector<Poly<N, Q>, R>,
-	pub v: Poly<N, Q>,
+	pub u: Vector<Poly<N, Q, 1>, R>,
+	pub v: Poly<N, Q, 1>,
 }
 impl<const N: usize, const R: usize, const Q: u32>
 	Ciphertext<N, R, Q>

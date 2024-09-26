@@ -46,24 +46,24 @@ impl SRng {
 	pub fn gen_small_vector_inclusive<const N: usize, const Q: u32>(&mut self, range: RangeInclusive<i32>) -> Vector<QInt<Q>, N> {
 		Vector { data: self.gen_small_array_inclusive(&range) }
 	}
-	pub fn gen_poly<const N: usize, const Q: u32>(&mut self) -> Poly<N, Q> {
+	pub fn gen_poly<const N: usize, const Q: u32>(&mut self) -> Poly<N, Q, 1> {
 		Poly { coefficients: self.gen_array() }
 	}
-	pub fn gen_small_poly<const N: usize, const Q: u32>(&mut self, range: &Range<i32>) -> Poly<N, Q> {
+	pub fn gen_small_poly<const N: usize, const Q: u32>(&mut self, range: &Range<i32>) -> Poly<N, Q, 1> {
 		Poly { coefficients: self.gen_small_array(range) }
 	}
-	pub fn gen_small_poly_inclusive<const N: usize, const Q: u32>(&mut self, range: &RangeInclusive<i32>) -> Poly<N, Q> {
+	pub fn gen_small_poly_inclusive<const N: usize, const Q: u32>(&mut self, range: &RangeInclusive<i32>) -> Poly<N, Q, 1> {
 		Poly { coefficients: self.gen_small_array_inclusive(range) }
 	}
-	pub fn gen_poly_vector<const N: usize, const M: usize, const Q: u32>(&mut self) -> Vector<Poly<M, Q>, N> {
+	pub fn gen_poly_vector<const N: usize, const M: usize, const Q: u32>(&mut self) -> Vector<Poly<M, Q, 1>, N> {
 		let data = std::array::from_fn(|_| self.gen_poly());
 		Vector { data }
 	}
-	pub fn gen_small_poly_vector<const N: usize, const M: usize, const Q: u32>(&mut self, range: Range<i32>) -> Vector<Poly<M, Q>, N> {
+	pub fn gen_small_poly_vector<const N: usize, const M: usize, const Q: u32>(&mut self, range: Range<i32>) -> Vector<Poly<M, Q, 1>, N> {
 		let data = std::array::from_fn(|_| self.gen_small_poly(&range));
 		Vector { data }
 	}
-	pub fn gen_small_poly_vector_inclusive<const N: usize, const M: usize, const Q: u32>(&mut self, range: RangeInclusive<i32>) -> Vector<Poly<M, Q>, N> {
+	pub fn gen_small_poly_vector_inclusive<const N: usize, const M: usize, const Q: u32>(&mut self, range: RangeInclusive<i32>) -> Vector<Poly<M, Q, 1>, N> {
 		let data = std::array::from_fn(|_| self.gen_small_poly_inclusive(&range));
 		Vector { data }
 	}
@@ -71,7 +71,7 @@ impl SRng {
 		let rows = std::array::from_fn(|_| self.gen_vector());
 		Matrix { rows }
 	}
-	pub fn gen_poly_matrix<const R: usize, const C: usize, const N: usize, const Q: u32>(&mut self) -> Matrix<Poly<N, Q>, R, C> {
+	pub fn gen_poly_matrix<const R: usize, const C: usize, const N: usize, const Q: u32>(&mut self) -> Matrix<Poly<N, Q, 1>, R, C> {
 		let rows = std::array::from_fn(|_| self.gen_poly_vector());
 		Matrix { rows }
 	}

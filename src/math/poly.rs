@@ -1,17 +1,21 @@
 
+use crate::util::serializable::Serializable;
+use super::{qint::QInt, ring::{Ring, RingOps}};
 use std::ops::{Add, Mul, Sub};
 
-use crate::util::serializable::Serializable;
-
-use super::{qint::QInt, ring::{Ring, RingOps}};
-
-/// A member of `Z_Q[x]/(x^N + 1)`.
-#[derive(Clone, Copy)]
-pub struct Poly<const N: usize, const Q: u32> {
+/// A member of `Z_Q[x]/(x^N + C)`.
+/// 
+/// Ideally, we want the signature to be:
+/// ```
+/// pub struct Poly<T, const N: usize, const C: T>
+/// ```
+/// but Rust doesn't yet support const parameters that depend on generic types.
+#[derive(Clone)]
+pub struct Poly<const N: usize, const Q: u32, const C: u32> {
 	pub coefficients: [QInt<Q>; N],
 }
 
-impl<const N: usize, const Q: u32> Ring for Poly<N, Q> {
+impl<const N: usize, const Q: u32, const C: u32> Ring for Poly<N, Q, C> {
 	fn zero() -> Self {
 		let coefficients = std::array::from_fn(|_| QInt::zero());
 		Self { coefficients }
@@ -21,11 +25,16 @@ impl<const N: usize, const Q: u32> Ring for Poly<N, Q> {
 		Self { coefficients }
 	}
 }
-impl<const N: usize, const Q: u32> RingOps<Poly<N, Q>> for Poly<N, Q> {}
-impl<const N: usize, const Q: u32> RingOps<Poly<N, Q>> for &Poly<N, Q> {}
+impl<const N: usize, const Q: u32, const C: u32>
+	RingOps<Poly<N, Q, C>>
+	for Poly<N, Q, C>
+{}
+impl<const N: usize, const Q: u32, const C: u32>
+	RingOps<Poly<N, Q, C>>
+	for &Poly<N, Q, C>
+{}
 
-impl<const N: usize, const Q: u32> Poly<N, Q>
-{
+impl<const N: usize, const Q: u32, const C: u32> Poly<N, Q, C> {
 	fn add_impl(&self, rhs: &Self) -> Self {
 		let coefficients = std::array::from_fn(|i| self.coefficients[i] + rhs.coefficients[i]);
 		Self { coefficients }
@@ -40,7 +49,7 @@ impl<const N: usize, const Q: u32> Poly<N, Q>
 				acc + self.coefficients[j] * rhs.coefficients[i - j]
 			});
 			let negative = (i + 1 .. N).fold(QInt::zero(), |acc, j| {
-				acc + self.coefficients[j] * rhs.coefficients[i + N - j]
+				acc + self.coefficients[j] * rhs.coefficients[i + N - j] * QInt::of_u32(C)
 			});
 			positive - negative
 		});
@@ -52,75 +61,75 @@ impl<const N: usize, const Q: u32> Poly<N, Q>
 	}
 }
 
-impl<const N: usize, const Q: u32> Add<Poly<N, Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn add(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Add<Poly<N, Q, C>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn add(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		self.add_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Add<Poly<N, Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn add(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Add<Poly<N, Q, C>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn add(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		self.add_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Add<&Poly<N, Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn add(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Add<&Poly<N, Q, C>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn add(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		self.add_impl(rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Add<&Poly<N, Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn add(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Add<&Poly<N, Q, C>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn add(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		self.add_impl(rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Sub<Poly<N, Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn sub(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Sub<Poly<N, Q, C>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn sub(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		self.sub_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Sub<Poly<N, Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn sub(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Sub<Poly<N, Q, C>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn sub(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		self.sub_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Sub<&Poly<N, Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn sub(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Sub<&Poly<N, Q, C>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn sub(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		self.sub_impl(rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Sub<&Poly<N, Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn sub(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Sub<&Poly<N, Q, C>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn sub(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		self.sub_impl(rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<Poly<N, Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<Poly<N, Q, C>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		self.mul_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<Poly<N, Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<Poly<N, Q, C>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		self.mul_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<&Poly<N, Q, C>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		self.mul_impl(rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<&Poly<N, Q, C>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		self.mul_impl(rhs)
 	}
 }
@@ -128,52 +137,52 @@ impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for &Poly<N, Q> {
 
 // --- Scalar Multiplication ---
 
-impl<const N: usize, const Q: u32> Mul<QInt<Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
+impl<const N: usize, const Q: u32, const C: u32> Mul<QInt<Q>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
 	fn mul(self, rhs: QInt<Q>) -> Self::Output {
 		self.mul_scalar_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<QInt<Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
+impl<const N: usize, const Q: u32, const C: u32> Mul<QInt<Q>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
 	fn mul(self, rhs: QInt<Q>) -> Self::Output {
 		self.mul_scalar_impl(&rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<&QInt<Q>> for Poly<N, Q> {
-	type Output = Poly<N, Q>;
+impl<const N: usize, const Q: u32, const C: u32> Mul<&QInt<Q>> for Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
 	fn mul(self, rhs: &QInt<Q>) -> Self::Output {
 		self.mul_scalar_impl(rhs)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<&QInt<Q>> for &Poly<N, Q> {
-	type Output = Poly<N, Q>;
+impl<const N: usize, const Q: u32, const C: u32> Mul<&QInt<Q>> for &Poly<N, Q, C> {
+	type Output = Poly<N, Q, C>;
 	fn mul(self, rhs: &QInt<Q>) -> Self::Output {
 		self.mul_scalar_impl(rhs)
 	}
 }
 
-impl<const N: usize, const Q: u32> Mul<Poly<N, Q>> for QInt<Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<Poly<N, Q, C>> for QInt<Q> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		rhs.mul_scalar_impl(&self)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<Poly<N, Q>> for &QInt<Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<Poly<N, Q, C>> for &QInt<Q> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: Poly<N, Q, C>) -> Self::Output {
 		rhs.mul_scalar_impl(self)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for QInt<Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<&Poly<N, Q, C>> for QInt<Q> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		rhs.mul_scalar_impl(&self)
 	}
 }
-impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for &QInt<Q> {
-	type Output = Poly<N, Q>;
-	fn mul(self, rhs: &Poly<N, Q>) -> Self::Output {
+impl<const N: usize, const Q: u32, const C: u32> Mul<&Poly<N, Q, C>> for &QInt<Q> {
+	type Output = Poly<N, Q, C>;
+	fn mul(self, rhs: &Poly<N, Q, C>) -> Self::Output {
 		rhs.mul_scalar_impl(self)
 	}
 }
@@ -181,9 +190,9 @@ impl<const N: usize, const Q: u32> Mul<&Poly<N, Q>> for &QInt<Q> {
 
 // --- Display ---
 
-impl<const N: usize, const Q: u32>
+impl<const N: usize, const Q: u32, const C: u32>
 	std::fmt::Display
-	for Poly<N, Q>
+	for Poly<N, Q, C>
 {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let formatted = self.coefficients.iter()
@@ -205,9 +214,9 @@ impl<const N: usize, const Q: u32>
 
 // --- Serialization ---
 
-impl<const N: usize, const Q: u32>
+impl<const N: usize, const Q: u32, const C: u32>
 	Serializable
-	for Poly<N, Q>
+	for Poly<N, Q, C>
 {
 	fn serialize(&self) -> Vec<bool> {
 		let mut result = vec![];
