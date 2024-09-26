@@ -1,5 +1,6 @@
 
 pub mod bits;
+pub mod direct_sum;
 pub mod matrix;
 pub mod poly;
 pub mod qint;
