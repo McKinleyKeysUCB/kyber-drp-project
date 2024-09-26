@@ -10,6 +10,8 @@
 
 mod base64;
 mod lwe;
+#[macro_use]
+mod macros;
 mod math;
 mod mlwe;
 mod rlwe;
