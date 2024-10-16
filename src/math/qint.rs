@@ -1,9 +1,9 @@
 
 use super::ring::{Ring, RingOps};
 use crate::util::serializable::Serializable;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Sub, Neg};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub struct QInt<const Q: u32> {
 	pub raw_value: u32,
 }
@@ -46,6 +46,26 @@ impl<const Q: u32> QInt<Q> {
 		Self {
 			raw_value: (self.raw_value * rhs.raw_value) % Q,
 		}
+	}
+	fn neg_impl(&self) -> Self {
+		Self::zero().sub_impl(self)
+	}
+	pub fn inv(&self) -> Self {
+		assert_ne!(*self, QInt::zero());
+		fn gcd(a: u32, b: u32, q: u32) -> (u32, u32, u32) {
+			match b {
+				0 => (a, 1, 0),
+				_ => {
+					let (g, x, y) = gcd(b, a % b, q);
+					let new_x = y;
+					let new_y = (q + x - ((a / b) * y) % q) % q;
+					(g, new_x, new_y)
+				},
+			}
+		}
+		let (g, x, _y) = gcd(self.raw_value, Q, Q);
+		assert_eq!(g, 1);
+		Self::of_u32(x)
 	}
 }
 
@@ -95,6 +115,18 @@ impl<const Q: u32> Sub<&QInt<Q>> for &QInt<Q> {
 	type Output = QInt<Q>;
 	fn sub(self, rhs: &QInt<Q>) -> Self::Output {
 		self.sub_impl(rhs)
+	}
+}
+impl<const Q: u32> Neg for QInt<Q> {
+	type Output = QInt<Q>;
+	fn neg(self) -> Self::Output {
+		self.neg_impl()
+	}
+}
+impl<const Q: u32> Neg for &QInt<Q> {
+	type Output = QInt<Q>;
+	fn neg(self) -> Self::Output {
+		self.neg_impl()
 	}
 }
 impl<const Q: u32> Mul<QInt<Q>> for QInt<Q> {
