@@ -7,9 +7,9 @@ pub fn keygen
 		rng: &mut SRng
 	) -> (EncryptKey<N, Q>, DecryptKey<N, Q>)
 {
-	let s = rng.gen_small_poly_inclusive::<N, Q>(&(-1 ..= 1));
-	let a = rng.gen_poly::<N, Q>();
-	let e = rng.gen_small_poly_inclusive::<N, Q>(&(-1 ..= 1));
+	let s = rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1));
+	let a = rng.gen_poly::<N, Q, 1>();
+	let e = rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1));
 	let t = &a * &s + &e;
 	let encrypt_key = EncryptKey { a, t };
 	let decrypt_key = DecryptKey { s };
@@ -24,9 +24,9 @@ fn encrypt_chunk
 	) -> Ciphertext<N, Q>
 {
 	let m = Poly { coefficients: std::array::from_fn(|i| if bits.data[i] { QInt::one() } else { QInt::zero() }) };
-	let r = rng.gen_small_poly_inclusive::<N, Q>(&(-1 ..= 1));
-	let e1 = rng.gen_small_poly_inclusive::<N, Q>(&(-1 ..= 1));
-	let e2 = rng.gen_small_poly_inclusive::<N, Q>(&(-1 ..= 1));
+	let r = rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1));
+	let e1 = rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1));
+	let e2 = rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1));
 	let u = &key.a * &r + &e1;
 	let v = &key.t * &r + &e2 + QInt::half() * m;
 	Ciphertext { u, v }
