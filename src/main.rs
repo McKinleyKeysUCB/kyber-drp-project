@@ -19,8 +19,10 @@ mod rlwe;
 mod util;
 
 use base64::Base64Convertible;
+use math::qint::QInt;
+use math::ring::Ring;
 use mlwe::core::{decrypt, encrypt, keygen};
-use math::srng::{self, SRng};
+use math::srng::SRng;
 
 const N: usize = 8;
 const M: usize = 3;
@@ -67,11 +69,27 @@ fn convert(input: &Poly<256, 3329, 1>) -> NTT {
 
 fn main() {
 	
-	println!("{}", 3329 % 17);
+	// println!("{}", 3329 % 17);
 	
-	// let mut srng = srng::SRng::new();
+	let mut srng = SRng::new();
+	// let a: QInt<Q> = srng.gen_qint();
+	// println!("a = {}", a);
+	// let b = a.inv();
+	// println!("b = {}", b);
+	// println!("a * b = {}", a * b);
 	// let poly = srng.gen_poly();
-	// convert(&poly);
+	// let ntt = convert(&poly);
+	
+	loop {
+		let p: Poly<2, 13, 7> = srng.gen_poly();
+		// let p: Poly<2, 13, 7> = Poly {
+		// 	coefficients: [QInt::of_u32(4), QInt::zero()],
+		// };
+		println!("p = {}", p);
+		let q = p.inv();
+		println!("q = {}", q);
+		println!("p * q = {}", p * q);
+	}
 	
 	// many_greetings!(3);
 	// for i in 0 .. 128 {

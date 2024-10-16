@@ -10,7 +10,7 @@ use std::ops::{Add, Mul, Sub};
 /// pub struct Poly<T, const N: usize, const C: T>
 /// ```
 /// but Rust doesn't yet support const parameters that depend on generic types.
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Poly<const N: usize, const Q: u32, const C: u32> {
 	pub coefficients: [QInt<Q>; N],
 }
@@ -68,6 +68,32 @@ impl<const N: usize, const Q: u32, const C: u32> Poly<N, Q, C> {
 		}
 		let sliced_coefficients = std::array::from_fn(|i| coefficients[i]);
 		Poly { coefficients: sliced_coefficients }
+	}
+}
+
+impl<const Q: u32, const C: u32> Poly<2, Q, C> {
+	pub fn inv(&self) -> Poly<2, Q, C> {
+		assert_ne!(*self, Self::zero());
+		let c = QInt::of_u32(C);
+		let b = self.coefficients[0];
+		let a = self.coefficients[1];
+		if a == QInt::zero() {
+			let coefficients = [
+				b.inv(),
+				QInt::zero(),
+			];
+			Poly { coefficients }
+		}
+		else {
+			let a_inv = a.inv();
+			let d = a_inv * a_inv * b * b + c;
+			let d_inv = (-d).inv();
+			let coefficients = [
+				-b * a_inv * a_inv * d_inv,
+				a_inv * d_inv,
+			];
+			Poly { coefficients }
+		}
 	}
 }
 
