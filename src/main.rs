@@ -4,6 +4,7 @@
 #![feature(adt_const_params)]
 #![feature(cmp_minmax)]
 #![feature(array_try_from_fn)]
+#![feature(proc_macro_hygiene)]
 
 #![allow(unused_parens)]
 #![allow(dead_code)]
@@ -19,7 +20,7 @@ mod util;
 
 use base64::Base64Convertible;
 use mlwe::core::{decrypt, encrypt, keygen};
-use math::srng::SRng;
+use math::srng::{self, SRng};
 
 const N: usize = 8;
 const M: usize = 3;
@@ -54,19 +55,40 @@ fn string_of_bits(bits: &Vec<bool>) -> String {
 	result
 }
 
+use kyber_macros::{ntt_type, ntt_impl};
+use crate::math::poly::Poly;
+use crate::math::direct_sum::DirectSum;
+
+type NTT = ntt_type!();
+
+fn convert(input: &Poly<256, 3329, 1>) -> NTT {
+	ntt_impl!()
+}
+
 fn main() {
 	
-	let mut rng = SRng::new();
+	println!("{}", 3329 % 17);
 	
-	let (encrypt_key, decrypt_key) = keygen(&mut rng);
+	// let mut srng = srng::SRng::new();
+	// let poly = srng.gen_poly();
+	// convert(&poly);
 	
-	let message = "Hello there. This is a really long message that takes several lines. Will it all be decrypted correctly?";
-	let message_bits = string_to_bits(&message);
-	let cipher = encrypt(&message_bits, &encrypt_key, &mut rng);
-	let base64 = cipher.to_base64();
-	println!("Base64: {:?}", base64);
-	let cipher_deserialized = Vec::<bool>::of_base64(&base64);
-	let result_bits = decrypt(&cipher_deserialized, &decrypt_key);
-	let result = string_of_bits(&result_bits);
-	println!("Result: {:?}", result);
+	// many_greetings!(3);
+	// for i in 0 .. 128 {
+	// 	println!("{}", bit_rev7(i));
+	// }
+	
+	// let mut rng = SRng::new();
+	// 
+	// let (encrypt_key, decrypt_key) = keygen(&mut rng);
+	// 
+	// let message = "Hello there. This is a really long message that takes several lines. Will it all be decrypted correctly?";
+	// let message_bits = string_to_bits(&message);
+	// let cipher = encrypt(&message_bits, &encrypt_key, &mut rng);
+	// let base64 = cipher.to_base64();
+	// println!("Base64: {:?}", base64);
+	// let cipher_deserialized = Vec::<bool>::of_base64(&base64);
+	// let result_bits = decrypt(&cipher_deserialized, &decrypt_key);
+	// let result = string_of_bits(&result_bits);
+	// println!("Result: {:?}", result);
 }

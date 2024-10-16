@@ -59,6 +59,16 @@ impl<const N: usize, const Q: u32, const C: u32> Poly<N, Q, C> {
 		let coefficients = self.coefficients.map(|c| c * rhs);
 		Self { coefficients }
 	}
+	pub fn rem<const M: usize, const D: u32>(&self) -> Poly<M, Q, D> {
+		assert!(N > M);
+		let mut coefficients = self.coefficients.clone();
+		for i in (M .. N).rev() {
+			coefficients[i - M] = &coefficients[i - M] - &coefficients[i] * QInt::of_u32(D);
+			coefficients[i] = QInt::zero();
+		}
+		let sliced_coefficients = std::array::from_fn(|i| coefficients[i]);
+		Poly { coefficients: sliced_coefficients }
+	}
 }
 
 impl<const N: usize, const Q: u32, const C: u32> Add<Poly<N, Q, C>> for Poly<N, Q, C> {

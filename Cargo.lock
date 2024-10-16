@@ -36,7 +36,16 @@ name = "kyber"
 version = "0.1.0"
 dependencies = [
  "base64",
+ "kyber_macros",
  "rand",
+]
+
+[[package]]
+name = "kyber_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
 ]
 
 [[package]]

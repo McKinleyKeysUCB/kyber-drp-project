@@ -3,167 +3,250 @@ use super::ring::{Ring, RingOps};
 use std::ops::{Add, Mul, Sub};
 
 #[derive(Clone)]
-pub struct DirectSum<T, const N: usize> {
-	elements: [T; N],
+pub struct DirectSum<A, B> {
+    a: A,
+    b: B,
 }
-impl<T, const N: usize>
+impl<A, B> DirectSum<A, B> {
+	pub fn new(a: A, b: B) -> Self {
+		Self { a, b }
+	}
+}
+
+impl<A, B>
 	Ring
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	fn zero() -> Self {
-		let elements = std::array::from_fn(|_| T::zero());
-		Self { elements }
-	}
-	fn one() -> Self {
-		let elements = std::array::from_fn(|_| T::one());
-		Self { elements }
-	}
+    fn zero() -> Self {
+        Self {
+            a: A::zero(),
+            b: B::zero(),
+        }
+    }
+    fn one() -> Self {
+        Self {
+            a: A::one(),
+            b: B::one(),
+        }
+    }
 }
-impl<T, const N: usize>
-	RingOps<DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	RingOps<DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {}
-impl<T, const N: usize>
-	RingOps<DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	RingOps<DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {}
 
-impl<T, const N: usize>
-	DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	fn add_impl(&self, rhs: &Self) -> Self {
-		let elements = std::array::from_fn(|i| &self.elements[i] + &rhs.elements[i]);
-		Self { elements }
-	}
-	fn sub_impl(&self, rhs: &Self) -> Self {
-		let elements = std::array::from_fn(|i| &self.elements[i] - &rhs.elements[i]);
-		Self { elements }
-	}
-	fn mul_impl(&self, rhs: &Self) -> Self {
-		let elements = std::array::from_fn(|i| &self.elements[i] * &rhs.elements[i]);
-		Self { elements }
-	}
+    fn add_impl(&self, rhs: &Self) -> Self {
+		Self {
+			a: &self.a + &rhs.a,
+			b: &self.b + &rhs.b,
+		}
+    }
+    fn sub_impl(&self, rhs: &Self) -> Self {
+        Self {
+			a: &self.a - &rhs.a,
+			b: &self.b - &rhs.b,
+		}
+    }
+    fn mul_impl(&self, rhs: &Self) -> Self {
+        Self {
+			a: &self.a * &rhs.a,
+			b: &self.b * &rhs.b,
+		}
+    }
 }
 
-impl<T, const N: usize>
-	Add<DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Add<DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn add(self, rhs: DirectSum<T, N>) -> Self::Output {
-		self.add_impl(&rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn add(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.add_impl(&rhs)
+    }
 }
-impl<T, const N: usize>
-	Add<DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Add<DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn add(self, rhs: DirectSum<T, N>) -> Self::Output {
-		self.add_impl(&rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn add(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.add_impl(&rhs)
+    }
 }
-impl<T, const N: usize>
-	Add<&DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Add<&DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn add(self, rhs: &DirectSum<T, N>) -> Self::Output {
-		self.add_impl(rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn add(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.add_impl(rhs)
+    }
 }
-impl<T, const N: usize>
-	Add<&DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Add<&DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn add(self, rhs: &DirectSum<T, N>) -> Self::Output {
-		self.add_impl(rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn add(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.add_impl(rhs)
+    }
 }
-impl<T, const N: usize> Sub<DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Sub<DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn sub(self, rhs: DirectSum<T, N>) -> Self::Output {
-		self.sub_impl(&rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn sub(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.sub_impl(&rhs)
+    }
 }
-impl<T, const N: usize>
-	Sub<DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Sub<DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn sub(self, rhs: DirectSum<T, N>) -> Self::Output {
-		self.sub_impl(&rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn sub(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.sub_impl(&rhs)
+    }
 }
-impl<T, const N: usize> Sub<&DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Sub<&DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn sub(self, rhs: &DirectSum<T, N>) -> Self::Output {
-		self.sub_impl(rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn sub(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.sub_impl(rhs)
+    }
 }
-impl<T, const N: usize>
-	Sub<&DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Sub<&DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn sub(self, rhs: &DirectSum<T, N>) -> Self::Output {
-		self.sub_impl(rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn sub(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.sub_impl(rhs)
+    }
 }
-impl<T, const N: usize>
-	Mul<DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Mul<DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn mul(self, rhs: DirectSum<T, N>) -> Self::Output {
-		self.mul_impl(&rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn mul(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.mul_impl(&rhs)
+    }
 }
-impl<T, const N: usize>
-	Mul<DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Mul<DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn mul(self, rhs: DirectSum<T, N>) -> Self::Output {
-		self.mul_impl(&rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn mul(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.mul_impl(&rhs)
+    }
 }
-impl<T, const N: usize>
-	Mul<&DirectSum<T, N>>
-	for DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Mul<&DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn mul(self, rhs: &DirectSum<T, N>) -> Self::Output {
-		self.mul_impl(rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn mul(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.mul_impl(rhs)
+    }
 }
-impl<T, const N: usize>
-	Mul<&DirectSum<T, N>>
-	for &DirectSum<T, N>
-	where T: Ring, for<'a> &'a T: RingOps<T>
+impl<A, B>
+	Mul<&DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
 {
-	type Output = DirectSum<T, N>;
-	fn mul(self, rhs: &DirectSum<T, N>) -> Self::Output {
-		self.mul_impl(rhs)
-	}
+    type Output = DirectSum<A, B>;
+    fn mul(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.mul_impl(rhs)
+    }
 }
