@@ -9,6 +9,8 @@
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
+#![recursion_limit = "256"]
+
 mod base64;
 mod lwe;
 #[macro_use]
@@ -57,44 +59,37 @@ fn string_of_bits(bits: &Vec<bool>) -> String {
 	result
 }
 
-use kyber_macros::{ntt_type, ntt_impl};
+use kyber_macros::{ntt_impl, ntt_rev_impl, ntt_type};
 use crate::math::poly::Poly;
 use crate::math::direct_sum::DirectSum;
 
 type NTT = ntt_type!();
 
 fn convert(input: &Poly<256, 3329, 1>) -> NTT {
+// fn convert(input: &Poly<4, 5, 1>) -> NTT {
 	ntt_impl!()
+}
+fn inv_convert(input: &NTT) -> Poly<256, 3329, 1> {
+// fn inv_convert(input: &NTT) -> Poly<4, 5, 1> {
+	ntt_rev_impl!()
 }
 
 fn main() {
 	
-	// println!("{}", 3329 % 17);
-	
 	let mut srng = SRng::new();
-	// let a: QInt<Q> = srng.gen_qint();
-	// println!("a = {}", a);
-	// let b = a.inv();
-	// println!("b = {}", b);
-	// println!("a * b = {}", a * b);
-	// let poly = srng.gen_poly();
-	// let ntt = convert(&poly);
 	
-	loop {
-		let p: Poly<2, 13, 7> = srng.gen_poly();
-		// let p: Poly<2, 13, 7> = Poly {
-		// 	coefficients: [QInt::of_u32(4), QInt::zero()],
-		// };
-		println!("p = {}", p);
-		let q = p.inv();
-		println!("q = {}", q);
-		println!("p * q = {}", p * q);
-	}
-	
-	// many_greetings!(3);
-	// for i in 0 .. 128 {
-	// 	println!("{}", bit_rev7(i));
-	// }
+	let original = srng.gen_poly();
+	// let original: Poly<4, 5, 1> = poly!(<Q = {5}>[1, 0, 1, 0]);
+	println!("original = {}", original);
+	println!();
+	let converted = convert(&original);
+	println!("converted = {:?}", converted);
+	println!();
+	let result = inv_convert(&converted);
+	println!("result = {}", result);
+	println!();
+	assert_eq!(original, result);
+	println!("Done");
 	
 	// let mut rng = SRng::new();
 	// 

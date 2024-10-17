@@ -35,32 +35,44 @@ impl<const N: usize, const Q: u32, const C: u32>
 {}
 
 impl<const N: usize, const Q: u32, const C: u32> Poly<N, Q, C> {
-	fn add_impl(&self, rhs: &Self) -> Self {
-		let coefficients = std::array::from_fn(|i| self.coefficients[i] + rhs.coefficients[i]);
+	pub fn add(lhs: &Self, rhs: &Self) -> Self {
+		let coefficients = std::array::from_fn(|i| lhs.coefficients[i] + rhs.coefficients[i]);
 		Self { coefficients }
 	}
-	fn sub_impl(&self, rhs: &Self) -> Self {
-		let coefficients = std::array::from_fn(|i| self.coefficients[i] - rhs.coefficients[i]);
+	pub fn sub(lhs: &Self, rhs: &Self) -> Self {
+		let coefficients = std::array::from_fn(|i| lhs.coefficients[i] - rhs.coefficients[i]);
 		Self { coefficients }
 	}
-	fn mul_impl(&self, rhs: &Self) -> Self {
+	pub fn mul(lhs: &Self, rhs: &Self) -> Self {
 		let coefficients = std::array::from_fn(|i| {
 			let positive = (0 ..= i).fold(QInt::zero(), |acc, j| {
-				acc + self.coefficients[j] * rhs.coefficients[i - j]
+				acc + lhs.coefficients[j] * rhs.coefficients[i - j]
 			});
 			let negative = (i + 1 .. N).fold(QInt::zero(), |acc, j| {
-				acc + self.coefficients[j] * rhs.coefficients[i + N - j] * QInt::of_u32(C)
+				acc + lhs.coefficients[j] * rhs.coefficients[i + N - j] * QInt::of_u32(C)
 			});
 			positive - negative
 		});
 		Self { coefficients }
 	}
-	fn mul_scalar_impl(&self, rhs: &QInt<Q>) -> Self {
-		let coefficients = self.coefficients.map(|c| c * rhs);
+	pub fn mul_scalar(lhs: &Self, rhs: &QInt<Q>) -> Self {
+		let coefficients = lhs.coefficients.map(|c| c * rhs);
 		Self { coefficients }
 	}
+	fn add_impl(&self, rhs: &Self) -> Self {
+		Self::add(self, rhs)
+	}
+	fn sub_impl(&self, rhs: &Self) -> Self {
+		Self::sub(self, rhs)
+	}
+	fn mul_impl(&self, rhs: &Self) -> Self {
+		Self::mul(self, rhs)
+	}
+	fn mul_scalar_impl(&self, rhs: &QInt<Q>) -> Self {
+		Self::mul_scalar(self, rhs)
+	}
 	pub fn rem<const M: usize, const D: u32>(&self) -> Poly<M, Q, D> {
-		assert!(N > M);
+		assert!(N >= M);
 		let mut coefficients = self.coefficients.clone();
 		for i in (M .. N).rev() {
 			coefficients[i - M] = &coefficients[i - M] - &coefficients[i] * QInt::of_u32(D);
@@ -68,6 +80,11 @@ impl<const N: usize, const Q: u32, const C: u32> Poly<N, Q, C> {
 		}
 		let sliced_coefficients = std::array::from_fn(|i| coefficients[i]);
 		Poly { coefficients: sliced_coefficients }
+	}
+	pub fn promoted<const M: usize, const D: u32>(&self) -> Poly<M, Q, D> {
+		assert!(M >= N);
+		let coefficients = std::array::from_fn(|i| if i < N { self.coefficients[i] } else { QInt::zero() });
+		Poly { coefficients }
 	}
 }
 
@@ -233,12 +250,20 @@ impl<const N: usize, const Q: u32, const C: u32>
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
 		let formatted = self.coefficients.iter()
 			.enumerate()
-			.map(|(i, value)| {
-				let result = value.to_string();
-				match i {
-					0 => result,
-					1 => result + "x",
-					_ => result + "x^" + &i.to_string(),
+			.filter_map(|(i, value)| {
+				if i == 0 {
+					Some(value.to_string())
+				}
+				else {
+					let suffix = match i {
+						1 => "x".to_string(),
+						_ => "x^".to_string() + &i.to_string(),
+					};
+					match value.raw_value {
+						0 => None,
+						1 => Some(suffix),
+						_ => Some(value.to_string() + &suffix),
+					}
 				}
 			})
 			.collect::<Vec<String>>()

@@ -5,8 +5,14 @@ use std::iter;
 use proc_macro::{Span, TokenStream, TokenTree};
 use quote::{quote, quote_spanned};
 
+const N: usize = 256;
+const M: usize = 128;
 const Q: u32 = 3329;
 const ZETA: u32 = 17;
+// const N: usize = 4;
+// const M: usize = 2;
+// const Q: u32 = 5;
+// const ZETA: u32 = 2;
 
 fn bit_rev_7(n: u32) -> u32 {
 	let mut result = 0;
@@ -29,14 +35,15 @@ fn pow_mod(a: u32, mut b: u32, m: u32) -> u32 {
         if b % 2 == 1 {
             result = (result * a_pow) % m;
         }
-        a_pow = (a_pow * a) % m;
+        a_pow = (a_pow * a_pow) % m;
         b /= 2;
     }
     result
 }
 
 fn c(i: u32) -> u32 {
-    Q - pow_mod(ZETA, 2 * bit_rev_7(i as u32) + 1, Q)
+    // (Q - pow_mod(ZETA, 2 * bit_rev_7(i as u32) + 1, Q)) % Q
+    (Q - pow_mod(ZETA, 2 * i + 1, Q)) % Q
 }
 
 #[proc_macro]
@@ -46,18 +53,20 @@ pub fn ntt_type(input: TokenStream) -> TokenStream {
         return err(Span::call_site(), "expected no arguments");
     }
     
-    (0 .. 128)
+    (0 .. M)
         .map(|i| {
-            let c = c(i);
+            let c = c(i as u32);
             quote! {
                 Poly<2, #Q, #c>
             }
         })
         .rev()
-        .reduce(|acc, poly| quote! {
-            DirectSum<#poly, #acc>
-        })
-        .unwrap()
+        .fold(
+            quote! { QInt<1> },
+            |acc, poly| quote! {
+                DirectSum<#poly, #acc>
+            },
+        )
         .into()
 }
 
@@ -68,19 +77,95 @@ pub fn ntt_impl(input: TokenStream) -> TokenStream {
         return err(Span::call_site(), "expected no arguments");
     }
     
-    (0 .. 128)
+    (0 .. M)
         .map(|i| {
-            let c = c(i);
+            let c = c(i as u32);
             quote! {
                 input.rem::<2, #c>()
             }
         })
         .rev()
-        .reduce(|acc, poly| quote! {
-            DirectSum::new(#poly, #acc)
-        })
-        .unwrap()
+        .fold(
+            quote! { QInt::zero() },
+            |acc, poly| quote! {
+                DirectSum::new(#poly, #acc)
+            },
+        )
         .into()
+}
+
+#[proc_macro]
+pub fn ntt_rev_impl(input: TokenStream) -> TokenStream {
+    
+    if !input.is_empty() {
+        return err(Span::call_site(), "expected no arguments");
+    }
+    
+    let remainder_values = (0 .. M)
+        .map(|i| {
+            let mut field = quote! { input };
+            for _ in 0 .. i {
+                field = quote! { #field.b };
+            }
+            field = quote! { #field.a };
+            quote! { #field.promoted() }
+        });
+    let remainders = quote! {
+        let remainders: [Poly<#N, #Q, 1>; #M] = [
+            #(#remainder_values),*
+        ];
+    };
+    let moduli_values = (0 .. M)
+        .map(|i| {
+            let c = c(i as u32);
+            quote! {
+                {
+                    let coefficients = std::array::from_fn(|j| match j {
+                        0 => QInt::of_u32(#c),
+                        2 => QInt::one(),
+                        _ => QInt::zero(),
+                    });
+                    Poly { coefficients }
+                }
+            }
+        });
+    let moduli = quote! {
+        let moduli: [Poly<#N, #Q, 1>; #M] = [
+            #(#moduli_values),*
+        ];
+    };
+    let mapped_values = (0 .. M)
+        .map(|i| {
+            let c = c(i as u32);
+            quote! {
+                {
+                    let poly = &remainders[#i];
+                    let product_of_other_moduli = moduli.iter()
+                        .enumerate()
+                        .fold(Poly::one(), |acc, (j, modulus)| {
+                            if j == #i { acc }
+                            else { acc * modulus }
+                        });
+                    let before = product_of_other_moduli.rem::<2, #c>();
+                    let after = before.inv();
+                    let inv: Poly<#N, #Q, 1> = after.promoted();
+                    poly * product_of_other_moduli * inv
+                }
+            }
+        });
+    
+    quote! {
+        {
+            #remainders
+            #moduli
+            [
+                #(#mapped_values),*
+            ]
+            .iter()
+            .fold(Poly::zero(), |acc, p| acc + p)
+        }
+    }
+    .into()
 }
 
 #[proc_macro]

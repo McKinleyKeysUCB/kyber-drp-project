@@ -2,10 +2,10 @@
 use super::ring::{Ring, RingOps};
 use std::ops::{Add, Mul, Sub};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DirectSum<A, B> {
-    a: A,
-    b: B,
+    pub a: A,
+    pub b: B,
 }
 impl<A, B> DirectSum<A, B> {
 	pub fn new(a: A, b: B) -> Self {
