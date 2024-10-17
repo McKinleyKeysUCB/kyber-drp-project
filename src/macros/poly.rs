@@ -13,7 +13,7 @@ macro_rules! poly {
     (<Q = {$q:expr}> [$($x:expr),* $(,)?]) => {
         {
             const N: usize = $crate::len!($($x),*);
-            $crate::math::poly::Poly::<N, $q> { coefficients: [$(QInt::of_u32($x)),+] }
+            $crate::math::poly::Poly::<N, $q, 1> { coefficients: [$(QInt::of_u32($x)),+] }
         }
     };
     ($($x:expr),* $(,)?) => {
