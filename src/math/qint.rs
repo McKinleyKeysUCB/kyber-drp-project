@@ -1,7 +1,7 @@
 
 use super::ring::{Ring, RingOps};
 use crate::util::serializable::Serializable;
-use std::ops::{Add, Mul, Sub, Neg};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, PartialEq, Debug)]
 pub struct QInt<const Q: u32> {
@@ -42,13 +42,16 @@ impl<const Q: u32> QInt<Q> {
 			raw_value: (self.raw_value + Q - rhs.raw_value) % Q,
 		}
 	}
+	fn neg_impl(&self) -> Self {
+		Self::zero().sub_impl(self)
+	}
 	fn mul_impl(&self, rhs: &Self) -> Self {
 		Self {
 			raw_value: (self.raw_value * rhs.raw_value) % Q,
 		}
 	}
-	fn neg_impl(&self) -> Self {
-		Self::zero().sub_impl(self)
+	fn div_impl(&self, rhs: &Self) -> Self {
+		self.mul_impl(&rhs.inv())
 	}
 	pub fn inv(&self) -> Self {
 		assert_ne!(*self, QInt::zero());
@@ -151,6 +154,74 @@ impl<const Q: u32> Mul<&QInt<Q>> for &QInt<Q> {
 	type Output = QInt<Q>;
 	fn mul(self, rhs: &QInt<Q>) -> Self::Output {
 		self.mul_impl(rhs)
+	}
+}
+impl<const Q: u32> Div<QInt<Q>> for QInt<Q> {
+	type Output = QInt<Q>;
+	fn div(self, rhs: QInt<Q>) -> Self::Output {
+		self.div_impl(&rhs)
+	}
+}
+impl<const Q: u32> Div<QInt<Q>> for &QInt<Q> {
+	type Output = QInt<Q>;
+	fn div(self, rhs: QInt<Q>) -> Self::Output {
+		self.div_impl(&rhs)
+	}
+}
+impl<const Q: u32> Div<&QInt<Q>> for QInt<Q> {
+	type Output = QInt<Q>;
+	fn div(self, rhs: &QInt<Q>) -> Self::Output {
+		self.div_impl(rhs)
+	}
+}
+impl<const Q: u32> Div<&QInt<Q>> for &QInt<Q> {
+	type Output = QInt<Q>;
+	fn div(self, rhs: &QInt<Q>) -> Self::Output {
+		self.div_impl(rhs)
+	}
+}
+
+
+// --- Assignment Operators ---
+
+impl<const Q: u32> AddAssign<&QInt<Q>> for QInt<Q> {
+	fn add_assign(&mut self, rhs: &QInt<Q>) {
+		*self = *self + rhs
+	}
+}
+impl<const Q: u32> AddAssign<QInt<Q>> for QInt<Q> {
+	fn add_assign(&mut self, rhs: QInt<Q>) {
+		*self = *self + rhs
+	}
+}
+impl<const Q: u32> SubAssign<&QInt<Q>> for QInt<Q> {
+	fn sub_assign(&mut self, rhs: &QInt<Q>) {
+		*self = *self - rhs
+	}
+}
+impl<const Q: u32> SubAssign<QInt<Q>> for QInt<Q> {
+	fn sub_assign(&mut self, rhs: QInt<Q>) {
+		*self = *self - rhs
+	}
+}
+impl<const Q: u32> MulAssign<&QInt<Q>> for QInt<Q> {
+	fn mul_assign(&mut self, rhs: &QInt<Q>) {
+		*self = *self * rhs
+	}
+}
+impl<const Q: u32> MulAssign<QInt<Q>> for QInt<Q> {
+	fn mul_assign(&mut self, rhs: QInt<Q>) {
+		*self = *self * rhs
+	}
+}
+impl<const Q: u32> DivAssign<&QInt<Q>> for QInt<Q> {
+	fn div_assign(&mut self, rhs: &QInt<Q>) {
+		*self = *self / rhs
+	}
+}
+impl<const Q: u32> DivAssign<QInt<Q>> for QInt<Q> {
+	fn div_assign(&mut self, rhs: QInt<Q>) {
+		*self = *self / rhs
 	}
 }
 

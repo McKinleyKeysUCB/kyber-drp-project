@@ -76,20 +76,26 @@ fn inv_convert(input: &NTT) -> Poly<256, 3329, 1> {
 
 fn main() {
 	
-	let mut srng = SRng::new();
+	let a = poly!(<Q = {5}>[0, 0, 1]);
+	let b = poly!(<Q = {5}>[0, 1, 0]);
+	println!("a = {}", a);
+	println!("b = {}", b);
+	println!("a / b = {}", a / b);
 	
-	let original = srng.gen_poly();
-	// let original: Poly<4, 5, 1> = poly!(<Q = {5}>[1, 0, 1, 0]);
-	println!("original = {}", original);
-	println!();
-	let converted = convert(&original);
-	println!("converted = {:?}", converted);
-	println!();
-	let result = inv_convert(&converted);
-	println!("result = {}", result);
-	println!();
-	assert_eq!(original, result);
-	println!("Done");
+	// let mut srng = SRng::new();
+	// 
+	// let original = srng.gen_poly();
+	// // let original: Poly<4, 5, 1> = poly!(<Q = {5}>[1, 0, 1, 0]);
+	// println!("original = {}", original);
+	// println!();
+	// let converted = convert(&original);
+	// println!("converted = {:?}", converted);
+	// println!();
+	// let result = inv_convert(&converted);
+	// println!("result = {}", result);
+	// println!();
+	// assert_eq!(original, result);
+	// println!("Done");
 	
 	// let mut rng = SRng::new();
 	// 

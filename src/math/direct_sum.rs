@@ -1,6 +1,6 @@
 
 use super::ring::{Ring, RingOps};
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 
 #[derive(Clone, Debug)]
 pub struct DirectSum<A, B> {
@@ -80,6 +80,12 @@ impl<A, B>
 			b: &self.b * &rhs.b,
 		}
     }
+	fn div_impl(&self, rhs: &Self) -> Self {
+        Self {
+			a: &self.a / &rhs.a,
+			b: &self.b / &rhs.b,
+		}
+    }
 }
 
 impl<A, B>
@@ -248,5 +254,61 @@ impl<A, B>
     type Output = DirectSum<A, B>;
     fn mul(self, rhs: &DirectSum<A, B>) -> Self::Output {
         self.mul_impl(rhs)
+    }
+}
+impl<A, B>
+	Div<DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
+{
+    type Output = DirectSum<A, B>;
+    fn div(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.div_impl(&rhs)
+    }
+}
+impl<A, B>
+	Div<DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
+{
+    type Output = DirectSum<A, B>;
+    fn div(self, rhs: DirectSum<A, B>) -> Self::Output {
+        self.div_impl(&rhs)
+    }
+}
+impl<A, B>
+	Div<&DirectSum<A, B>>
+	for DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
+{
+    type Output = DirectSum<A, B>;
+    fn div(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.div_impl(rhs)
+    }
+}
+impl<A, B>
+	Div<&DirectSum<A, B>>
+	for &DirectSum<A, B>
+	where
+		A: Ring,
+		for<'a> &'a A: RingOps<A>,
+		B: Ring,
+		for<'a> &'a B: RingOps<B>,
+{
+    type Output = DirectSum<A, B>;
+    fn div(self, rhs: &DirectSum<A, B>) -> Self::Output {
+        self.div_impl(rhs)
     }
 }
