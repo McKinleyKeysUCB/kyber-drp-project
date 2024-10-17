@@ -81,7 +81,7 @@ impl<const N: usize, const Q: u32, const C: u32> Poly<N, Q, C> {
 		let sliced_coefficients = std::array::from_fn(|i| coefficients[i]);
 		Poly { coefficients: sliced_coefficients }
 	}
-	pub fn promoted<const M: usize, const D: u32>(&self) -> Poly<M, Q, D> {
+	pub fn embedded<const M: usize, const D: u32>(&self) -> Poly<M, Q, D> {
 		assert!(M >= N);
 		let coefficients = std::array::from_fn(|i| if i < N { self.coefficients[i] } else { QInt::zero() });
 		Poly { coefficients }

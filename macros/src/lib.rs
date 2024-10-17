@@ -108,7 +108,7 @@ pub fn ntt_rev_impl(input: TokenStream) -> TokenStream {
                 field = quote! { #field.b };
             }
             field = quote! { #field.a };
-            quote! { #field.promoted() }
+            quote! { #field.embedded() }
         });
     let remainders = quote! {
         let remainders: [Poly<#N, #Q, 1>; #M] = [
@@ -148,7 +148,7 @@ pub fn ntt_rev_impl(input: TokenStream) -> TokenStream {
                         });
                     let before = product_of_other_moduli.rem::<2, #c>();
                     let after = before.inv();
-                    let inv: Poly<#N, #Q, 1> = after.promoted();
+                    let inv: Poly<#N, #Q, 1> = after.embedded();
                     poly * product_of_other_moduli * inv
                 }
             }
