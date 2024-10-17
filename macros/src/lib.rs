@@ -110,10 +110,17 @@ pub fn ntt_rev_impl(input: TokenStream) -> TokenStream {
             field = quote! { #field.a };
             quote! { #field.embedded() }
         });
+    let n_plus_one = N + 1;
     let remainders = quote! {
         let remainders: [Poly<#N, #Q, 1>; #M] = [
             #(#remainder_values),*
         ];
+        let original: Poly<#n_plus_one, #Q, 1> = Poly {
+            coefficients: std::array::from_fn(|i| match i {
+                0 | #N => QInt::one(),
+                _ => QInt::zero(),
+            }),
+        };
     };
     let moduli_values = (0 .. M)
         .map(|i| {
@@ -140,12 +147,13 @@ pub fn ntt_rev_impl(input: TokenStream) -> TokenStream {
             quote! {
                 {
                     let poly = &remainders[#i];
-                    let product_of_other_moduli = moduli.iter()
-                        .enumerate()
-                        .fold(Poly::one(), |acc, (j, modulus)| {
-                            if j == #i { acc }
-                            else { acc * modulus }
-                        });
+                    let product_of_other_moduli = (&original / moduli[#i].embedded()).rem::<#N, 1>();
+                    // let other_product_of_other_moduli = moduli.iter()
+                    //     .enumerate()
+                    //     .fold(Poly::one(), |acc, (j, modulus)| {
+                    //         if j == #i { acc }
+                    //         else { acc * modulus }
+                    //     });
                     let before = product_of_other_moduli.rem::<2, #c>();
                     let after = before.inv();
                     let inv: Poly<#N, #Q, 1> = after.embedded();
