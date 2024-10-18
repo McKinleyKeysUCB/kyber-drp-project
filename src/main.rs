@@ -9,7 +9,7 @@
 #![allow(unused_parens)]
 #![allow(dead_code)]
 
-#![recursion_limit = "256"]
+#![recursion_limit = "1024"]
 
 mod base64;
 mod lwe;
@@ -21,14 +21,8 @@ mod rlwe;
 mod util;
 
 use base64::Base64Convertible;
-use math::qint::QInt;
-use math::ring::Ring;
-use mlwe::core::{decrypt, encrypt, keygen};
 use math::srng::SRng;
-
-const N: usize = 8;
-const M: usize = 3;
-const Q: u32 = 71;
+use mlwe::core::{decrypt, encrypt, keygen};
 
 fn string_to_bits(message: &str) -> Vec<bool> {
 	let mut result = vec![];
@@ -59,48 +53,19 @@ fn string_of_bits(bits: &Vec<bool>) -> String {
 	result
 }
 
-use kyber_macros::{ntt_impl, ntt_rev_impl, ntt_type};
-use crate::math::poly::Poly;
-use crate::math::direct_sum::DirectSum;
-
-type NTT = ntt_type!();
-
-fn convert(input: &Poly<256, 3329, 1>) -> NTT {
-// fn convert(input: &Poly<4, 5, 1>) -> NTT {
-	ntt_impl!()
-}
-fn inv_convert(input: &NTT) -> Poly<256, 3329, 1> {
-// fn inv_convert(input: &NTT) -> Poly<4, 5, 1> {
-	ntt_rev_impl!()
-}
-
 fn main() {
 	
-	let mut srng = SRng::new();
-	let original = srng.gen_poly();
-	// let original: Poly<4, 5, 1> = poly!(<Q = {5}>[1, 0, 1, 0]);
-	println!("original = {}", original);
-	println!();
-	let converted = convert(&original);
-	println!("converted = {:?}", converted);
-	println!();
-	let result = inv_convert(&converted);
-	println!("result = {}", result);
-	println!();
-	assert_eq!(original, result);
-	println!("Done");
+	let mut rng = SRng::new();
 	
-	// let mut rng = SRng::new();
-	// 
-	// let (encrypt_key, decrypt_key) = keygen(&mut rng);
-	// 
-	// let message = "Hello there. This is a really long message that takes several lines. Will it all be decrypted correctly?";
-	// let message_bits = string_to_bits(&message);
-	// let cipher = encrypt(&message_bits, &encrypt_key, &mut rng);
-	// let base64 = cipher.to_base64();
-	// println!("Base64: {:?}", base64);
-	// let cipher_deserialized = Vec::<bool>::of_base64(&base64);
-	// let result_bits = decrypt(&cipher_deserialized, &decrypt_key);
-	// let result = string_of_bits(&result_bits);
-	// println!("Result: {:?}", result);
+	let (encrypt_key, decrypt_key) = keygen(&mut rng);
+	
+	let message = "Hello there. This is a really long message that takes several lines. Will it all be decrypted correctly?";
+	let message_bits = string_to_bits(&message);
+	let cipher = encrypt(&message_bits, &encrypt_key, &mut rng);
+	let base64 = cipher.to_base64();
+	println!("Base64: {:?}", base64);
+	let cipher_deserialized = Vec::<bool>::of_base64(&base64);
+	let result_bits = decrypt(&cipher_deserialized, &decrypt_key);
+	let result = string_of_bits(&result_bits);
+	println!("Result: {:?}", result);
 }

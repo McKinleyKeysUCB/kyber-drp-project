@@ -1,6 +1,6 @@
 
-use crate::math::{poly::Poly, vector::Vector};
+use crate::math::{ntt::NTT, vector::Vector};
 
 pub struct DecryptKey<const N: usize, const R: usize, const Q: u32> {
-	pub s: Vector<Poly<N, Q, 1>, R>,
+	pub s: Vector<NTT, R>,
 }

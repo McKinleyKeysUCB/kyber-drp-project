@@ -62,7 +62,7 @@ pub fn ntt_type(input: TokenStream) -> TokenStream {
         })
         .rev()
         .fold(
-            quote! { QInt<1> },
+            quote! { QInt<#Q> },
             |acc, poly| quote! {
                 DirectSum<#poly, #acc>
             },

@@ -3,6 +3,7 @@ use crate::math::ring::{Ring, RingOps};
 use crate::util::serializable::Serializable;
 use std::ops::{Add, Mul};
 
+#[derive(Clone)]
 pub struct Vector<T, const N: usize> where T: Ring, for<'a> &'a T: RingOps<T> {
 	pub data: [T; N],
 }

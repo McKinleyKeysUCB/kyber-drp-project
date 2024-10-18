@@ -1,5 +1,5 @@
 
-use crate::math::{bits::Bits, poly::Poly, qint::QInt, ring::Ring, srng::SRng};
+use crate::math::{bits::Bits, ntt::NTT, poly::Poly, qint::QInt, ring::Ring, srng::SRng};
 use super::{ciphertext::Ciphertext, decrypt_key::DecryptKey, encrypt_key::EncryptKey};
 
 const N: usize = 256;
@@ -8,9 +8,9 @@ const C: usize = 4;
 const Q: u32 = 3329;
 
 pub fn keygen(rng: &mut SRng) -> (EncryptKey<N, R, C, Q>, DecryptKey<N, C, Q>) {
-	let s = rng.gen_small_poly_vector_inclusive::<C, N, Q, 1>(-1 ..= 1);
-	let a = rng.gen_poly_matrix::<R, C, N, Q, 1>();
-	let e = rng.gen_small_poly_vector_inclusive::<R, N, Q, 1>(-1 ..= 1);
+	let s = NTT::convert_poly_vector(&rng.gen_small_poly_vector_inclusive::<C, N, Q, 1>(-1 ..= 1));
+	let a = NTT::convert_poly_matrix(&rng.gen_poly_matrix::<R, C, N, Q, 1>());
+	let e = NTT::convert_poly_vector(&rng.gen_small_poly_vector_inclusive::<R, N, Q, 1>(-1 ..= 1));
 	let t = &a * &s + &e;
 	let encrypt_key = EncryptKey { a, t };
 	let decrypt_key = DecryptKey { s };
@@ -22,12 +22,16 @@ fn encrypt_chunk(
 	key: &EncryptKey<N, R, C, Q>,
 	rng: &mut SRng
 ) -> Ciphertext<N, C, Q> {
-	let m = Poly { coefficients: std::array::from_fn(|i| if bits.data[i] { QInt::one() } else { QInt::zero() }) };
-	let r = rng.gen_small_poly_vector_inclusive::<R, N, Q, 1>(-1 ..= 1);
-	let e1 = rng.gen_small_poly_vector_inclusive::<C, N, Q, 1>(-1 ..= 1);
-	let e2 = rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1));
+	let m = NTT::convert_poly(&Poly {
+		coefficients: std::array::from_fn(|i| if bits.data[i] { QInt::one() } else { QInt::zero() })
+	});
+	let r = NTT::convert_poly_vector(&rng.gen_small_poly_vector_inclusive::<R, N, Q, 1>(-1 ..= 1));
+	let e1 = NTT::convert_poly_vector(&rng.gen_small_poly_vector_inclusive::<C, N, Q, 1>(-1 ..= 1));
+	let e2 = NTT::convert_poly(&rng.gen_small_poly_inclusive::<N, Q, 1>(&(-1 ..= 1)));
 	let u = &key.a.transpose() * &r + &e1;
-	let v = &key.t * &r + &e2 + QInt::half() * m;
+	let v = &key.t * &r + &e2 + m * QInt::half();
+	let u = NTT::inv_convert_poly_vector(&u);
+	let v = NTT::inv_convert_poly(&v);
 	Ciphertext { u, v }
 }
 
@@ -35,7 +39,10 @@ fn decrypt_chunk(
 	ciphertext: &Ciphertext<N, R, Q>,
 	key: &DecryptKey<N, R, Q>
 ) -> Bits<N> {
-	let expected_value = &ciphertext.v - &ciphertext.u * &key.s;
+	let u = NTT::convert_poly_vector(&ciphertext.u);
+	let v = NTT::convert_poly(&ciphertext.v);
+	let expected_value = &v - &u * &key.s;
+	let expected_value = NTT::inv_convert_poly(&expected_value);
 	Bits {
 		data: expected_value.coefficients.map(|c| {
 			let dist = c.dist(&QInt::zero());
