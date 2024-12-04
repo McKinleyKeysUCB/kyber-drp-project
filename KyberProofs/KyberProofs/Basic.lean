@@ -56,7 +56,6 @@ lemma quotient_mk_coprime {i j : R} (hi : i ∈ I) (hij : i + j = 1) :
     ] at hij
     exact hij
 
--- I * J = I ∩ J => helps prove injectivity
 example {h : IsCoprime I J} :
   R ⧸ (I * J) ≃+* (R ⧸ I) × (R ⧸ J)
   := by
@@ -110,16 +109,5 @@ example {h : IsCoprime I J} :
           quotient_mk_coprime hj hij,
           one_mul,
         ]
-
--- variable {R : Type*} [CommRing R] {A B P : R[X]}
--- 
--- theorem polynomial_chinese_remainder :
---   R[X] ≃+* R[X]
---   := by
---     -- apply RingEquiv.ofRingHom
---     sorry
---   -- Ideal.quotient_inf_equiv_prod (span {A}) (span {B})
---   --   (by rw [←span_mul, h])
---   -- coprime
 
 end
