@@ -1,9 +1,7 @@
 
-import Mathlib
+import Mathlib.RingTheory.Ideal.Quotient.Operations
 
 open Ideal Finset
-open scoped Polynomial
-
 
 ---------------------------------------------------------
 --      2-IDEAL CASE OF CHINESE REMAINDER THEOREM      --

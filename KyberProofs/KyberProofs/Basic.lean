@@ -1,9 +1,8 @@
 
-import Mathlib
 import KyberProofs.Ideals
 import KyberProofs.Polynomials
 
-open Polynomial Ideal Finset
+open Finset Ideal Polynomial
 open scoped Polynomial
 
 noncomputable section

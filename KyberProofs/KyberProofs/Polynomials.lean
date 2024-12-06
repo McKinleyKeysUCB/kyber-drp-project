@@ -1,7 +1,10 @@
 
-import Mathlib
+import Mathlib.Data.Int.CardIntervalMod
+import Mathlib.Algebra.Polynomial.Monic
+import Mathlib.RingTheory.RootsOfUnity.PrimitiveRoots
+import Mathlib.FieldTheory.Finite.Basic
 
-open Polynomial Finset BigOperators Nat
+open Nat Finset Polynomial BigOperators
 open scoped Polynomial
 
 noncomputable section
