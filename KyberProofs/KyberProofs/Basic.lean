@@ -1,113 +1,79 @@
 
 import Mathlib
+import KyberProofs.Ideals
+import KyberProofs.Polynomials
 
 open Polynomial Ideal DirectSum
 open scoped Polynomial
 
 noncomputable section
 
-variable {R : Type*} [CommRing R] {I J : Ideal R}
+variable {n k q r : ℕ} [Fact (q.Prime)] {ζ : ZMod q}
 
-lemma Ideal.min_eq_mul_of_coprime (h : IsCoprime I J) :
-  I ⊓ J = I * J
+abbrev T := (ZMod q)[X]
+
+lemma Function.onFun_onFun {α β γ φ : Type} {f : γ → γ → φ} {g : β → γ} {h : α → β} :
+  (f on g on h) = (f on (g ∘ h))
   := by
-    apply Ideal.ext
-    intro a
-    rw [Ideal.mem_inf]
-    constructor
-    · intro ha
-      obtain ⟨i, hi, j, hj, h⟩ := isCoprime_iff_exists.mp h
-      apply congr_arg (fun x => a * x) at h
-      rw [mul_one, mul_add, mul_comm] at h
-      rw [← h]
-      apply Ideal.add_mem
-      · exact mul_mem_mul hi ha.right
-      · exact mul_mem_mul ha.left hj
-    · intro ha
-      constructor
-      · exact mul_le_right ha
-      · exact mul_le_left ha
+    unfold Function.onFun
+    simp
 
-lemma Ideal.mem_mul {a : R} (h : IsCoprime I J) :
-  a ∈ I * J ↔ a ∈ I ∧ a ∈ J
+def ntt
+  (hn : n = 2^k) (hk : k ≠ 0)
+  (hq : q = n * r + 1) (hr : Odd r)
+  (hζ : orderOf ζ = n)
+:
+  (ZMod q)[X] ⧸ (span {X^n + 1} : Ideal (ZMod q)[X]) ≃+* ((i : Finset.range (n / 2)) → (ZMod q)[X] ⧸ span {X^2 - C (ζ^(2 * i.val + 1))})
   := by
-    rw [← min_eq_mul_of_coprime h, mem_inf]
-
-def lift :
-  R ⧸ I → R
-  :=
-    Classical.choose (Function.Surjective.hasRightInverse Ideal.Quotient.mk_surjective)
-
-lemma quotient_mk_lift {I : Ideal R} {a : R ⧸ I} :
-  Ideal.Quotient.mk I (lift a) = a
-  := by
-    have : Function.RightInverse lift (Ideal.Quotient.mk I) := Classical.choose_spec (Function.Surjective.hasRightInverse Ideal.Quotient.mk_surjective)
-    exact this a
-
-lemma quotient_mk_coprime {i j : R} (hi : i ∈ I) (hij : i + j = 1) :
-  Ideal.Quotient.mk I j = 1
-  := by
-    apply congr_arg (Ideal.Quotient.mk I) at hij
-    rw [
-      RingHom.map_add,
-      RingHom.map_one,
-      Quotient.eq_zero_iff_mem.mpr hi,
-      zero_add,
-    ] at hij
-    exact hij
-
-example {h : IsCoprime I J} :
-  R ⧸ (I * J) ≃+* (R ⧸ I) × (R ⧸ J)
-  := by
-    let A := R ⧸ (I * J)
-    let B := (R ⧸ I) × (R ⧸ J)
-    change A ≃+* B
-    let f₀ : R →+* B := (Ideal.Quotient.mk I).prod (Ideal.Quotient.mk J)
-    let f : A →+* B := Ideal.Quotient.lift (I * J) f₀ (by
-      intro a ha
-      unfold f₀
-      rw [RingHom.prod_apply, Prod.mk_eq_zero, Quotient.eq_zero_iff_mem, Quotient.eq_zero_iff_mem]
-      exact (mem_mul h).mp ha)
-    apply RingEquiv.ofBijective f
-    constructor
-    · unfold f f₀
-      rw [Ideal.injective_lift_iff _]
-      apply Ideal.ext
-      intro a
-      rw [
-        RingHom.mem_ker,
-        RingHom.prod_apply,
-        Prod.mk_eq_zero,
-        Quotient.eq_zero_iff_mem,
-        Quotient.eq_zero_iff_mem,
-        mem_mul h,
-      ]
-    · unfold f f₀
-      apply Ideal.Quotient.lift_surjective_of_surjective
-      intro b
-      unfold B at b
-      obtain ⟨i, hi, j, hj, hij⟩ := isCoprime_iff_exists.mp h
-      use i * (lift b.snd) + (j * lift b.fst)
-      rw [@RingHom.prod_apply]
-      apply Prod.ext
-      · simp
-        rw [
-          quotient_mk_lift,
-          Quotient.eq_zero_iff_mem.mpr hi,
-          zero_mul,
-          zero_add,
-          quotient_mk_coprime hi hij,
-          one_mul,
-        ]
-      · simp
-        rw [add_comm] at hij
-        rw [
-          quotient_mk_lift,
-          Quotient.eq_zero_iff_mem.mpr hj,
-          zero_mul,
-          add_zero,
-          quotient_mk_coprime hj hij,
-          one_mul,
-        ]
+    let R := (ZMod q)[X]
+    let ι := Finset.range (n / 2)
+    let s' (i : ℕ) := X^2 - C (ζ^(2 * i + 1))
+    let s (i : ι) := s' i.val
+    let I (i : ℕ) := span {s' i}
+    change R ⧸ (span {X^n + 1}) ≃+* ((i : ι) → R ⧸ I i)
+    have : ∏ i : ι, s i = ∏ i ∈ ι, s' i := by
+      unfold s
+      rw [Finset.prod_coe_sort]
+    have : ∏ i : ι, I i = span {X^n + 1} := by
+      rw [prod_span_singleton]
+      congr
+      rw [this]
+      exact prod_quads' hn hk hq hr hζ
+    rw [← this]
+    have inst : Nonempty ι := by
+      apply Finset.Nonempty.to_subtype
+      rw [Finset.nonempty_range_iff]
+      apply (Nat.div_ne_zero_iff (by norm_num)).mpr
+      rw [hn]
+      exact Nat.le_self_pow hk 2
+    apply chinese_remainder' (s := s)
+    · intro i
+      unfold s I
+      apply mem_span_singleton_self
+    · have : Pairwise (IsCoprime on s) ↔ Set.Pairwise ι (IsCoprime on s') := by
+        rw [← Finset.pairwise_subtype_iff_pairwise_finset']
+      rw [this]
+      have : s' = quad (ζ := ζ) ∘ (fun i => 2 * i + 1) := by
+        apply _root_.funext
+        intro i
+        unfold s' quad
+        simp
+      have : (IsCoprime on s') = ((IsCoprime on quad (ζ := ζ)) on (fun i => 2 * i + 1)) := by
+        nth_rw 2 [Function.onFun_onFun]
+        rw [this]
+      rw [this]
+      rw [← Set.InjOn.pairwise_image]
+      · have : (fun i => 2 * i + 1) '' ι = odds (n := n) := by
+          rw [odds_eq_image_range (by
+            rw [hn]
+            exact even_two_pow hk
+          )]
+          unfold ι
+          simp
+        rw [this]
+        apply pairwise_coprime hn hk hq hr hζ
+      · intro i hi j hj hij
+        simp at hij
+        exact hij
 
 end
