@@ -4,9 +4,17 @@ import Mathlib
 open Polynomial Ideal DirectSum
 open scoped Polynomial
 
-noncomputable section
 
-variable {α : Type} [DecidableEq α] {R : Type*} [CommRing R] {I J : Ideal R}
+---------------------------------------------------------
+--      2-IDEAL CASE OF CHINESE REMAINDER THEOREM      --
+---------------------------------------------------------
+
+noncomputable section Ideals₂
+
+variable
+  {α : Type} [DecidableEq α]
+  {R : Type*} [CommRing R]
+  {I J : Ideal R}
 
 lemma Ideal.mem_mul {a : R} (h : IsCoprime I J) :
   a ∈ I * J ↔ a ∈ I ∧ a ∈ J
@@ -25,11 +33,99 @@ lemma Ideal.mem_mul {a : R} (h : IsCoprime I J) :
       · exact mul_mem_mul hi ha.right
       · exact mul_mem_mul ha.left hj
 
-lemma Ideal.prod_mem_prod'
+def lift :
+  R ⧸ I → R
+  :=
+    Classical.choose (Function.Surjective.hasRightInverse Ideal.Quotient.mk_surjective)
+
+lemma quotient_mk_lift {I : Ideal R} {a : R ⧸ I} :
+  Ideal.Quotient.mk I (lift a) = a
+  := by
+    have : Function.RightInverse lift (Ideal.Quotient.mk I) := Classical.choose_spec (Function.Surjective.hasRightInverse Ideal.Quotient.mk_surjective)
+    exact this a
+
+lemma quotient_mk_coprime {i j : R} (hi : i ∈ I) (hij : i + j = 1) :
+  Ideal.Quotient.mk I j = 1
+  := by
+    apply congr_arg (Ideal.Quotient.mk I) at hij
+    rw [
+      RingHom.map_add,
+      RingHom.map_one,
+      Quotient.eq_zero_iff_mem.mpr hi,
+      zero_add,
+    ] at hij
+    exact hij
+
+def chinese_remainder₂ {h : IsCoprime I J} :
+  R ⧸ (I * J) ≃+* (R ⧸ I) × (R ⧸ J)
+  := by
+    let A := R ⧸ (I * J)
+    let B := (R ⧸ I) × (R ⧸ J)
+    change A ≃+* B
+    let f₀ : R →+* B := (Ideal.Quotient.mk I).prod (Ideal.Quotient.mk J)
+    let f : A →+* B := Ideal.Quotient.lift (I * J) f₀ (by
+      intro a ha
+      unfold f₀
+      rw [RingHom.prod_apply, Prod.mk_eq_zero, Quotient.eq_zero_iff_mem, Quotient.eq_zero_iff_mem]
+      exact (mem_mul h).mp ha)
+    apply RingEquiv.ofBijective f
+    constructor
+    · unfold f f₀
+      rw [Ideal.injective_lift_iff _]
+      apply Ideal.ext
+      intro a
+      rw [
+        RingHom.mem_ker,
+        RingHom.prod_apply,
+        Prod.mk_eq_zero,
+        Quotient.eq_zero_iff_mem,
+        Quotient.eq_zero_iff_mem,
+        mem_mul h,
+      ]
+    · unfold f f₀
+      apply Ideal.Quotient.lift_surjective_of_surjective
+      intro b
+      unfold B at b
+      obtain ⟨i, hi, j, hj, hij⟩ := isCoprime_iff_exists.mp h
+      use i * (lift b.snd) + (j * lift b.fst)
+      rw [@RingHom.prod_apply]
+      apply Prod.ext
+      · simp
+        rw [
+          quotient_mk_lift,
+          Quotient.eq_zero_iff_mem.mpr hi,
+          zero_mul,
+          zero_add,
+          quotient_mk_coprime hi hij,
+          one_mul,
+        ]
+      · simp
+        rw [add_comm] at hij
+        rw [
+          quotient_mk_lift,
+          Quotient.eq_zero_iff_mem.mpr hj,
+          zero_mul,
+          add_zero,
+          quotient_mk_coprime hj hij,
+          one_mul,
+        ]
+
+end Ideals₂
+
+
+---------------------------------------------------------
+--      GENERAL CASE OF CHINESE REMAINDER THEOREM      --
+---------------------------------------------------------
+
+noncomputable section IdealsGeneral
+
+variable
+  {α : Type} [DecidableEq α]
+  {R : Type} [CommRing R]
   {ι : Finset α}
-  {I : α → Ideal R} {x : ι → R}
-  (h : ∀ i : ι, x i ∈ I i)
-:
+  {I : α → Ideal R}
+
+lemma Ideal.prod_mem_prod' {x : ι → R} (h : ∀ i : ι, x i ∈ I i) :
   ∏ i : ι, x i ∈ ∏ i ∈ ι, I i
   := by
     let x' (a : α) :=
@@ -99,83 +195,6 @@ lemma Ideal.mem_prod'
       · simp [hij, ha]
       · simp [hij, hs]
 
-def lift :
-  R ⧸ I → R
-  :=
-    Classical.choose (Function.Surjective.hasRightInverse Ideal.Quotient.mk_surjective)
-
-lemma quotient_mk_lift {I : Ideal R} {a : R ⧸ I} :
-  Ideal.Quotient.mk I (lift a) = a
-  := by
-    have : Function.RightInverse lift (Ideal.Quotient.mk I) := Classical.choose_spec (Function.Surjective.hasRightInverse Ideal.Quotient.mk_surjective)
-    exact this a
-
-lemma quotient_mk_coprime {i j : R} (hi : i ∈ I) (hij : i + j = 1) :
-  Ideal.Quotient.mk I j = 1
-  := by
-    apply congr_arg (Ideal.Quotient.mk I) at hij
-    rw [
-      RingHom.map_add,
-      RingHom.map_one,
-      Quotient.eq_zero_iff_mem.mpr hi,
-      zero_add,
-    ] at hij
-    exact hij
-
-def chinese_remainder {h : IsCoprime I J} :
-  R ⧸ (I * J) ≃+* (R ⧸ I) × (R ⧸ J)
-  := by
-    let A := R ⧸ (I * J)
-    let B := (R ⧸ I) × (R ⧸ J)
-    change A ≃+* B
-    let f₀ : R →+* B := (Ideal.Quotient.mk I).prod (Ideal.Quotient.mk J)
-    let f : A →+* B := Ideal.Quotient.lift (I * J) f₀ (by
-      intro a ha
-      unfold f₀
-      rw [RingHom.prod_apply, Prod.mk_eq_zero, Quotient.eq_zero_iff_mem, Quotient.eq_zero_iff_mem]
-      exact (mem_mul h).mp ha)
-    apply RingEquiv.ofBijective f
-    constructor
-    · unfold f f₀
-      rw [Ideal.injective_lift_iff _]
-      apply Ideal.ext
-      intro a
-      rw [
-        RingHom.mem_ker,
-        RingHom.prod_apply,
-        Prod.mk_eq_zero,
-        Quotient.eq_zero_iff_mem,
-        Quotient.eq_zero_iff_mem,
-        mem_mul h,
-      ]
-    · unfold f f₀
-      apply Ideal.Quotient.lift_surjective_of_surjective
-      intro b
-      unfold B at b
-      obtain ⟨i, hi, j, hj, hij⟩ := isCoprime_iff_exists.mp h
-      use i * (lift b.snd) + (j * lift b.fst)
-      rw [@RingHom.prod_apply]
-      apply Prod.ext
-      · simp
-        rw [
-          quotient_mk_lift,
-          Quotient.eq_zero_iff_mem.mpr hi,
-          zero_mul,
-          zero_add,
-          quotient_mk_coprime hi hij,
-          one_mul,
-        ]
-      · simp
-        rw [add_comm] at hij
-        rw [
-          quotient_mk_lift,
-          Quotient.eq_zero_iff_mem.mpr hj,
-          zero_mul,
-          add_zero,
-          quotient_mk_coprime hj hij,
-          one_mul,
-        ]
-
 lemma prod_eq_zero {ι : Finset α} {i j : ι} {f : ι → R} (h : i ≠ j) :
   (∏ k ∈ {j}ᶜ, if k = i then 0 else f k) = 0
   := by
@@ -185,7 +204,7 @@ lemma prod_eq_zero {ι : Finset α} {i j : ι} {f : ι → R} (h : i ≠ j) :
     apply Finset.prod_eq_zero this
     simp
 
-def chinese_remainder'
+def chinese_remainder
   {α : Type} [DecidableEq α]
   {ι : Finset α} [Nonempty ι]
   {I : α → Ideal R}
@@ -287,4 +306,4 @@ def chinese_remainder'
       simp [*]
       simp [quotient_mk_lift]
 
-end
+end IdealsGeneral

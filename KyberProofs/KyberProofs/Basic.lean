@@ -10,13 +10,22 @@ noncomputable section
 
 variable {n k q r : ℕ} [Fact (q.Prime)] {ζ : ZMod q}
 
-abbrev T := (ZMod q)[X]
+--------------------
+--     LEMMAS     --
+--------------------
 
 lemma Function.onFun_onFun {α β γ φ : Type} {f : γ → γ → φ} {g : β → γ} {h : α → β} :
   (f on g on h) = (f on (g ∘ h))
   := by
     unfold Function.onFun
     simp
+
+
+--------------------
+--      GOAL      --
+--------------------
+
+abbrev T := (ZMod q)[X]
 
 def ntt
   (hn : n = 2^k) (hk : k ≠ 0)
@@ -46,7 +55,7 @@ def ntt
       apply (Nat.div_ne_zero_iff (by norm_num)).mpr
       rw [hn]
       exact Nat.le_self_pow hk 2
-    apply chinese_remainder' (s := s)
+    apply chinese_remainder (s := s)
     · intro i
       unfold s I
       apply mem_span_singleton_self
